@@ -18,6 +18,7 @@ import javax.swing.JPasswordField;
 import java.awt.Font;
 import java.awt.Color;
 import javax.swing.JButton;
+import java.awt.SystemColor;
 
 public class TelaLogin extends JFrame {
 
@@ -48,24 +49,26 @@ public class TelaLogin extends JFrame {
 	 */
 	public TelaLogin() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 660, 520);
+		setBounds(100, 100, 676, 520);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
 		JPanel panel = new JPanel();
-		panel.setBounds(0, 0, 658, 488);
+		panel.setBounds(0, 0, 686, 488);
 		contentPane.add(panel);
 		panel.setLayout(null);
 		
 		JButton btnOk = new JButton("OK");
+		btnOk.setBackground(SystemColor.inactiveCaption);
 		btnOk.setIcon(new ImageIcon(TelaLogin.class.getResource("/br/com/mlsolucoes/imagens/sign-check-icon.png")));
 		btnOk.setFont(new Font("Tahoma", Font.PLAIN, 17));
 		btnOk.setBounds(368, 401, 112, 41);
 		panel.add(btnOk);
 		
 		JButton btnSair = new JButton("Sair");
+		btnSair.setBackground(SystemColor.inactiveCaption);
 		btnSair.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				dispose();
@@ -81,7 +84,7 @@ public class TelaLogin extends JFrame {
 		panel.add(passwordField);
 		
 		JMenuBar menuBar = new JMenuBar();
-		menuBar.setBounds(0, 0, 649, 26);
+		menuBar.setBounds(0, 0, 674, 26);
 		panel.add(menuBar);
 		
 		JMenu mnArquivo = new JMenu("Arquivo");
@@ -110,7 +113,7 @@ public class TelaLogin extends JFrame {
 		mnSobre.add(mntmSobreAAplicao);
 		
 		JLabel lblUsurio = new JLabel("Usu\u00E1rio");
-		lblUsurio.setForeground(Color.DARK_GRAY);
+		lblUsurio.setForeground(Color.WHITE);
 		lblUsurio.setFont(new Font("Tahoma", Font.BOLD, 20));
 		lblUsurio.setBounds(123, 127, 112, 16);
 		panel.add(lblUsurio);
@@ -122,14 +125,14 @@ public class TelaLogin extends JFrame {
 		textField.setColumns(10);
 		
 		JLabel lblSenha = new JLabel("Senha");
-		lblSenha.setForeground(Color.DARK_GRAY);
+		lblSenha.setForeground(Color.WHITE);
 		lblSenha.setFont(new Font("Tahoma", Font.BOLD, 20));
 		lblSenha.setBounds(123, 222, 90, 16);
 		panel.add(lblSenha);
 		
 		JLabel label = new JLabel("");
 		label.setIcon(new ImageIcon(TelaLogin.class.getResource("/br/com/mlsolucoes/imagens/login.jpg")));
-		label.setBounds(0, 26, 649, 462);
+		label.setBounds(0, 26, 674, 462);
 		panel.add(label);
 	}
 }

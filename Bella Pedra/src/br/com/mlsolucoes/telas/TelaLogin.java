@@ -6,12 +6,16 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import br.com.mlsolucoes.classes.ConectaBanco;
+
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.awt.event.ActionEvent;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
@@ -48,6 +52,7 @@ public class TelaLogin extends JFrame {
 	 * Create the frame.
 	 */
 	public TelaLogin() {
+		setTitle("Tela de Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 676, 520);
 		contentPane = new JPanel();
@@ -61,6 +66,17 @@ public class TelaLogin extends JFrame {
 		panel.setLayout(null);
 		
 		JButton btnOk = new JButton("OK");
+		btnOk.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				try{
+				ConectaBanco conecta = new ConectaBanco();
+				conecta.conectaBanco();
+				}catch(SQLException e){
+					
+				}
+			}
+		});
 		btnOk.setBackground(SystemColor.inactiveCaption);
 		btnOk.setIcon(new ImageIcon(TelaLogin.class.getResource("/br/com/mlsolucoes/imagens/sign-check-icon.png")));
 		btnOk.setFont(new Font("Tahoma", Font.PLAIN, 17));
@@ -91,7 +107,14 @@ public class TelaLogin extends JFrame {
 		mnArquivo.setFont(new Font("Segoe UI", Font.PLAIN, 18));
 		menuBar.add(mnArquivo);
 		
-		JMenuItem mntmNovoUsurio = new JMenuItem("Novo Usu\u00E1rio");
+		JMenuItem mntmNovoUsurio = new JMenuItem("Atualizar Senha");
+		mntmNovoUsurio.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				TelaAtualizaSenha novaTela = new TelaAtualizaSenha();
+				novaTela.setVisible(true);
+				novaTela.setLocationRelativeTo(null);
+			}
+		});
 		mntmNovoUsurio.setFont(new Font("Segoe UI", Font.PLAIN, 17));
 		mnArquivo.add(mntmNovoUsurio);
 		
@@ -109,6 +132,13 @@ public class TelaLogin extends JFrame {
 		menuBar.add(mnSobre);
 		
 		JMenuItem mntmSobreAAplicao = new JMenuItem("Sobre a Aplica\u00E7\u00E3o");
+		mntmSobreAAplicao.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				TelaSobre novaTelaSobre = new TelaSobre();
+				novaTelaSobre.setVisible(true);
+				novaTelaSobre.setLocationRelativeTo(null);
+			}
+		});
 		mntmSobreAAplicao.setFont(new Font("Segoe UI", Font.PLAIN, 17));
 		mnSobre.add(mntmSobreAAplicao);
 		

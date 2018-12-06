@@ -3,5 +3,9 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="C:/Users/wladi/Downloads/mariadb-java-client-1.1.9.jar"/>
+	<classpathentry kind="lib" path="C:/Users/wladi/Documents/jCalendar/lib/jcalendar-1.4.jar"/>
+	<classpathentry kind="lib" path="C:/Users/wladi/Documents/jCalendar/lib/jgoodies-common-1.2.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/wladi/Documents/jCalendar/lib/jgoodies-looks-2.4.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/wladi/Documents/jCalendar/lib/junit-4.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

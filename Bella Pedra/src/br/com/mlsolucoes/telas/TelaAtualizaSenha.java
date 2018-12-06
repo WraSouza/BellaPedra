@@ -6,7 +6,11 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import br.com.mlsolucoes.classes.Login;
+
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import java.awt.Font;
@@ -20,8 +24,9 @@ import java.awt.event.ActionEvent;
 public class TelaAtualizaSenha extends JDialog {
 
 	private JPanel contentPane;
-	private JTextField textField;
-	private JPasswordField passwordField;
+	private JTextField textFieldUser;
+	private JPasswordField passwordFieldNova;
+	private JPasswordField passwordFieldAntes;
 
 	/**
 	 * Launch the application.
@@ -59,37 +64,69 @@ public class TelaAtualizaSenha extends JDialog {
 		panel.setLayout(null);
 		
 		JButton btnAlterar = new JButton("Alterar");
+		btnAlterar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				Login login = new Login();
+				
+				boolean verificaUsuario;
+				
+				String usuario = textFieldUser.getText();
+				String senhaUsuario = passwordFieldAntes.getText();
+				String senhaUsuarioNova = passwordFieldNova.getText();
+				
+				verificaUsuario = login.verificaUsuario(usuario, senhaUsuario);
+				
+				if(verificaUsuario){
+					login.alteraSenha(usuario, senhaUsuarioNova);
+					JOptionPane.showMessageDialog(null, "Senha Alterada Com Sucesso");
+				}else{
+					JOptionPane.showMessageDialog(null, "Senha Não Confere");
+				}				
+				
+			}
+		});
+		
+		passwordFieldAntes = new JPasswordField();
+		passwordFieldAntes.setBounds(320, 122, 185, 26);
+		panel.add(passwordFieldAntes);
+		
+		JLabel lblSenhaAtual = new JLabel("Senha Atual");
+		lblSenhaAtual.setFont(new Font("Tahoma", Font.BOLD, 20));
+		lblSenhaAtual.setForeground(Color.WHITE);
+		lblSenhaAtual.setBounds(132, 126, 138, 16);
+		panel.add(lblSenhaAtual);
 		btnAlterar.setFont(new Font("Tahoma", Font.PLAIN, 17));
 		btnAlterar.setIcon(new ImageIcon(TelaAtualizaSenha.class.getResource("/br/com/mlsolucoes/imagens/sign-check-icon.png")));
 		btnAlterar.setBounds(334, 317, 119, 41);
 		panel.add(btnAlterar);
 		
-		JButton btnCancelar = new JButton("Sair");
-		btnCancelar.addActionListener(new ActionListener() {
+		JButton btnSair = new JButton("Sair");
+		btnSair.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				dispose();
 			}
 		});
-		btnCancelar.setFont(new Font("Tahoma", Font.PLAIN, 17));
-		btnCancelar.setIcon(new ImageIcon(TelaAtualizaSenha.class.getResource("/br/com/mlsolucoes/imagens/sign-delete-icon.png")));
-		btnCancelar.setBounds(485, 317, 119, 41);
-		panel.add(btnCancelar);
+		btnSair.setFont(new Font("Tahoma", Font.PLAIN, 17));
+		btnSair.setIcon(new ImageIcon(TelaAtualizaSenha.class.getResource("/br/com/mlsolucoes/imagens/sign-delete-icon.png")));
+		btnSair.setBounds(485, 317, 119, 41);
+		panel.add(btnSair);
 		
-		passwordField = new JPasswordField();
-		passwordField.setFont(new Font("Tahoma", Font.BOLD, 20));
-		passwordField.setBounds(320, 188, 185, 26);
-		panel.add(passwordField);
+		passwordFieldNova = new JPasswordField();
+		passwordFieldNova.setFont(new Font("Tahoma", Font.BOLD, 20));
+		passwordFieldNova.setBounds(320, 188, 185, 26);
+		panel.add(passwordFieldNova);
 		
-		textField = new JTextField();
-		textField.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		textField.setBounds(320, 124, 185, 26);
-		panel.add(textField);
-		textField.setColumns(10);
+		textFieldUser = new JTextField();
+		textFieldUser.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		textFieldUser.setBounds(320, 51, 185, 26);
+		panel.add(textFieldUser);
+		textFieldUser.setColumns(10);
 		
 		JLabel lblUsurio = new JLabel("Usu\u00E1rio");
 		lblUsurio.setForeground(Color.WHITE);
 		lblUsurio.setFont(new Font("Tahoma", Font.BOLD, 20));
-		lblUsurio.setBounds(131, 124, 110, 25);
+		lblUsurio.setBounds(131, 52, 110, 25);
 		panel.add(lblUsurio);
 		
 		JLabel lblNovaSenha = new JLabel("Nova Senha");

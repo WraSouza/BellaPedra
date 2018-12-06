@@ -8,13 +8,16 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import br.com.mlsolucoes.classes.ConectaBanco;
+import br.com.mlsolucoes.classes.Login;
 
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.awt.event.ActionEvent;
 import javax.swing.JTextField;
@@ -23,11 +26,13 @@ import java.awt.Font;
 import java.awt.Color;
 import javax.swing.JButton;
 import java.awt.SystemColor;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class TelaLogin extends JFrame {
 
 	private JPanel contentPane;
-	private JTextField textField;
+	private JTextField textFieldUser;
 	private JPasswordField passwordField;
 
 	/**
@@ -69,9 +74,25 @@ public class TelaLogin extends JFrame {
 		btnOk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
+				Login login = new Login();
+				
+				String usuario = textFieldUser.getText();
+				String senha = passwordField.getText();
+				
 				try{
 				ConectaBanco conecta = new ConectaBanco();
 				conecta.conectaBanco();
+				
+				boolean verificaUsuario = login.verificaUsuario(usuario, senha);
+				
+				if(verificaUsuario){
+					TelaPrincipal novaTela = new TelaPrincipal();
+					novaTela.setVisible(true);
+					dispose();
+				}else{
+					JOptionPane.showMessageDialog(null, "Dados Não Conferem");
+				}
+				
 				}catch(SQLException e){
 					
 				}
@@ -96,6 +117,48 @@ public class TelaLogin extends JFrame {
 		panel.add(btnSair);
 		
 		passwordField = new JPasswordField();
+		passwordField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent evt) {
+				
+				if(evt.getKeyCode()==KeyEvent.VK_ENTER){
+					try{
+			            
+				        ConectaBanco conecta = new ConectaBanco();			        
+				        conecta.conectaBanco();				       
+				        
+				        String loginusuario = textFieldUser.getText();
+				        String senhaUsuario = passwordField.getText();
+				        
+				        String fazerLogin = "select * from login where loginUser = '" +loginusuario+ "'";
+				        
+				        ResultSet rs = ConectaBanco.stm.executeQuery(fazerLogin);
+				        rs.first();
+				       
+				        if((loginusuario.equals(rs.getString("loginUser")))&&(senhaUsuario.equals(rs.getString("loginSenha"))))
+				        {				            				            
+				                JOptionPane.showMessageDialog(null, "Acesso Autorizado");
+				                //Chamar Tela de Opções  
+				                 textFieldUser.setText("");
+				                    passwordField.setText("");                    
+				                    TelaPrincipal telaopcoes = new TelaPrincipal();
+				                    telaopcoes.setVisible(true);
+				                    dispose();				                
+				            
+				        }else{
+				            JOptionPane.showMessageDialog(null, "Senha Incorreta");
+				            textFieldUser.setText("");
+				            passwordField.setText("");
+				        }
+				        
+				        }catch(SQLException ex){
+				            JOptionPane.showMessageDialog(null, "Usuáro Não Cadastrado");
+				            textFieldUser.setText("");
+				            passwordField.setText("");
+				        }
+				}
+			}
+		});
 		passwordField.setBounds(299, 210, 202, 31);
 		panel.add(passwordField);
 		
@@ -148,11 +211,11 @@ public class TelaLogin extends JFrame {
 		lblUsurio.setBounds(123, 127, 112, 16);
 		panel.add(lblUsurio);
 		
-		textField = new JTextField();
-		textField.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		textField.setBounds(299, 115, 202, 31);
-		panel.add(textField);
-		textField.setColumns(10);
+		textFieldUser = new JTextField();
+		textFieldUser.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		textFieldUser.setBounds(299, 115, 202, 31);
+		panel.add(textFieldUser);
+		textFieldUser.setColumns(10);
 		
 		JLabel lblSenha = new JLabel("Senha");
 		lblSenha.setForeground(Color.WHITE);

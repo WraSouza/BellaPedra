@@ -101,6 +101,7 @@ public class TelaPrincipal extends JFrame {
 				
 				String opcaoDesejada = (String)comboBoxOpcaoDesejada.getSelectedItem();
 				
+				//Se a opção desejada for ENTRADA, irá habilitar as opções para a função de entada de valores da venda, como nome, valor, cliente, etc..
 				if(opcaoDesejada=="Entrada"){
 					panelEntrada.setEnabled(true);
 					formattedTextFieldCPF.setEditable(true);

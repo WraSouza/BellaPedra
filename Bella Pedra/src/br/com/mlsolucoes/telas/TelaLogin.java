@@ -88,6 +88,9 @@ public class TelaLogin extends JFrame {
 				if(verificaUsuario){
 					TelaPrincipal novaTela = new TelaPrincipal();
 					novaTela.setVisible(true);
+					
+					novaTela.recebeLogin(usuario);
+					
 					dispose();
 				}else{
 					JOptionPane.showMessageDialog(null, "Dados Não Conferem");
@@ -143,6 +146,7 @@ public class TelaLogin extends JFrame {
 				                    passwordField.setText("");                    
 				                    TelaPrincipal telaopcoes = new TelaPrincipal();
 				                    telaopcoes.setVisible(true);
+				                    telaopcoes.recebeLogin(loginusuario);
 				                    dispose();				                
 				            
 				        }else{

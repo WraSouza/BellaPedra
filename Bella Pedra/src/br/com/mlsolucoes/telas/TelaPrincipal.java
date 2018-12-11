@@ -57,6 +57,7 @@ public class TelaPrincipal extends JFrame {
 	private JPanel panel_1;
 	private JButton btnSalvar;
 	private JButton buttonPesquisar;
+	private JTextField textFieldObsSaida;
 
 	/**
 	 * Launch the application.
@@ -126,7 +127,7 @@ public class TelaPrincipal extends JFrame {
 	 */
 	public TelaPrincipal() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 925, 638);
+		setBounds(100, 100, 925, 717);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -159,7 +160,7 @@ public class TelaPrincipal extends JFrame {
 		mnSobre.add(mntmSobreAAplicao);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setBounds(0, 82, 907, 550);
+		tabbedPane.setBounds(0, 82, 907, 588);
 		tabbedPane.setFont(new Font("Dialog",Font.BOLD,16));
 		contentPane.add(tabbedPane);
 		
@@ -193,7 +194,8 @@ public class TelaPrincipal extends JFrame {
 					panelSaida.setEnabled(false);
 					formattedTextFieldValorSaida.setEditable(false);
 					comboBoxMotivo.setEnabled(false);
-					dateChooserSaida.setEnabled(false);					
+					dateChooserSaida.setEnabled(false);		
+					textFieldObsSaida.setEditable(false);
 					
 				}else if(opcaoDesejada=="Saída"){
 					//desabilita componentes do painel de Entrada
@@ -210,6 +212,7 @@ public class TelaPrincipal extends JFrame {
 					formattedTextFieldValorSaida.setEditable(true);
 					comboBoxMotivo.setEnabled(true);
 					dateChooserSaida.setEnabled(true);	
+					textFieldObsSaida.setEditable(true);
 				}
 				
 			}
@@ -299,7 +302,7 @@ public class TelaPrincipal extends JFrame {
 		
 		panelSaida = new JPanel();
 		panelSaida.setBorder(new TitledBorder(null, "Sa\u00EDda", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelSaida.setBounds(12, 285, 866, 186);
+		panelSaida.setBounds(12, 285, 866, 225);
 		panel.add(panelSaida);
 		panelSaida.setLayout(null);
 		
@@ -391,6 +394,18 @@ public class TelaPrincipal extends JFrame {
 		comboBoxDescricaoMotivo.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		comboBoxDescricaoMotivo.setBounds(417, 55, 241, 28);
 		panelSaida.add(comboBoxDescricaoMotivo);
+		
+		JLabel lblObservaes = new JLabel("Observa\u00E7\u00F5es");
+		lblObservaes.setFont(new Font("Tahoma", Font.BOLD, 15));
+		lblObservaes.setBounds(37, 118, 147, 16);
+		panelSaida.add(lblObservaes);
+		
+		textFieldObsSaida = new JTextField();
+		textFieldObsSaida.setHorizontalAlignment(SwingConstants.RIGHT);
+		textFieldObsSaida.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		textFieldObsSaida.setBounds(34, 147, 624, 39);
+		panelSaida.add(textFieldObsSaida);
+		textFieldObsSaida.setColumns(10);
 		
 		panel_1 = new JPanel();
 		tabbedPane.addTab("Consulta", null, panel_1, null);		

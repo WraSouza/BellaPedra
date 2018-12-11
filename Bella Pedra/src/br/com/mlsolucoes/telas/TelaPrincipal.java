@@ -47,11 +47,16 @@ public class TelaPrincipal extends JFrame {
 	private JPanel panelEntrada;
 	private JPanel panelSaida;
 	private JTextField textFieldProduto;
+	private JComboBox comboBoxDescricaoMotivo;
+	private JComboBox comboBoxMotivo;
 	private JComboBox comboBoxMateriaPrima;
 	private JFormattedTextField formattedTextFieldValorEntrada;
 	private JDateChooser dateChooserEntrada;
 	private JDateChooser dateChooserSaida;
-	private JTextField textFieldMotivo;
+	private String user;
+	private JPanel panel_1;
+	private JButton btnSalvar;
+	private JButton buttonPesquisar;
 
 	/**
 	 * Launch the application.
@@ -59,9 +64,9 @@ public class TelaPrincipal extends JFrame {
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				try {
+				try {					
 					TelaPrincipal frame = new TelaPrincipal();
-					frame.setVisible(true);
+					frame.setVisible(true);						
 					
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -78,8 +83,7 @@ public class TelaPrincipal extends JFrame {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
-	}*/
-	
+	}*/	
 	
 	private void buscaMateriaPrima(){
 		
@@ -102,6 +106,20 @@ public class TelaPrincipal extends JFrame {
 		}		
 		
 	}
+	
+	public void recebeLogin(String login){
+		
+		user = login;
+		
+		if(user.equals("lielson")){			
+			btnSalvar.setEnabled(true);
+			buttonPesquisar.setEnabled(true);
+		}else {
+			buttonPesquisar.setEnabled(false);
+			
+		}
+		
+	}
 
 	/**
 	 * Create the frame.
@@ -114,12 +132,12 @@ public class TelaPrincipal extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		JButton btnNewButton = new JButton("");
-		btnNewButton.setBackground(SystemColor.menu);
-		btnNewButton.setToolTipText("Salvar");
-		btnNewButton.setIcon(new ImageIcon("C:\\Users\\wladi\\Downloads\\save.png"));
-		btnNewButton.setBounds(0, 24, 51, 41);
-		contentPane.add(btnNewButton);
+		btnSalvar = new JButton("");
+		btnSalvar.setBackground(SystemColor.menu);
+		btnSalvar.setToolTipText("Salvar");
+		btnSalvar.setIcon(new ImageIcon("C:\\Users\\wladi\\Downloads\\save.png"));
+		btnSalvar.setBounds(0, 24, 51, 41);
+		contentPane.add(btnSalvar);
 		
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setBounds(0, 0, 907, 26);
@@ -174,7 +192,7 @@ public class TelaPrincipal extends JFrame {
 					//desabilita componentes do painel de Saída
 					panelSaida.setEnabled(false);
 					formattedTextFieldValorSaida.setEditable(false);
-					textFieldMotivo.setEditable(false);
+					comboBoxMotivo.setEnabled(false);
 					dateChooserSaida.setEnabled(false);					
 					
 				}else if(opcaoDesejada=="Saída"){
@@ -190,7 +208,7 @@ public class TelaPrincipal extends JFrame {
 					//habilita componentes do painel de Saída
 					panelSaida.setEnabled(true);
 					formattedTextFieldValorSaida.setEditable(true);
-					textFieldMotivo.setEditable(true);
+					comboBoxMotivo.setEnabled(true);
 					dateChooserSaida.setEnabled(true);	
 				}
 				
@@ -303,27 +321,78 @@ public class TelaPrincipal extends JFrame {
 		
 		JLabel lblMotivo = new JLabel("Motivo");
 		lblMotivo.setFont(new Font("Tahoma", Font.BOLD, 15));
-		lblMotivo.setBounds(207, 34, 76, 16);
+		lblMotivo.setBounds(196, 34, 76, 16);
 		panelSaida.add(lblMotivo);
-		
-		textFieldMotivo = new JTextField();
-		textFieldMotivo.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		textFieldMotivo.setHorizontalAlignment(SwingConstants.RIGHT);
-		textFieldMotivo.setBounds(207, 55, 198, 30);
-		panelSaida.add(textFieldMotivo);
-		textFieldMotivo.setColumns(10);
 		
 		dateChooserSaida = new JDateChooser();
 		dateChooserSaida.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		dateChooserSaida.setBounds(446, 55, 173, 30);
+		dateChooserSaida.setBounds(681, 55, 173, 30);
 		panelSaida.add(dateChooserSaida);
 		
 		JLabel lblDataDoPagamento = new JLabel("Data do Pagamento");
 		lblDataDoPagamento.setFont(new Font("Tahoma", Font.BOLD, 15));
-		lblDataDoPagamento.setBounds(446, 34, 173, 16);
+		lblDataDoPagamento.setBounds(681, 34, 173, 16);
 		panelSaida.add(lblDataDoPagamento);
 		
-		JPanel panel_1 = new JPanel();
+		comboBoxMotivo = new JComboBox();
+		comboBoxMotivo.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent arg0) {
+				
+				String opcaoEscolhida = (String)comboBoxMotivo.getSelectedItem();
+				ResultSet rs = null;
+				comboBoxDescricaoMotivo.removeAllItems();
+				String opcao = null;
+				
+				try{
+					ConectaBanco conecta = new ConectaBanco();
+					conecta.conectaBanco();
+					
+					if(opcaoEscolhida=="Fornecedor"){
+						opcao = "Fornecedor";
+						String buscaValores = "select * from empresas where empresaSetor= '"+opcao+"'";
+						rs = conecta.stm.executeQuery(buscaValores);
+						
+						while(rs.next()){
+							comboBoxDescricaoMotivo.addItem(rs.getString("empresaNome"));
+						}
+					}else if(opcaoEscolhida=="Impostos"){
+						
+						String buscaValores = "select * from impostos";
+						rs = conecta.stm.executeQuery(buscaValores);
+						
+						while(rs.next()){
+							comboBoxDescricaoMotivo.addItem(rs.getString("impostoNome"));
+						}
+						
+					}else if(opcaoEscolhida=="Diversos"){
+						
+						opcao = "Diversos";						
+						String buscaValores = "select * from empresas where empresaSetor = '"+opcao+"'";
+						rs = conecta.stm.executeQuery(buscaValores);
+						
+						while(rs.next()){
+							comboBoxDescricaoMotivo.addItem(rs.getString("empresaNome"));
+						}
+						
+					}
+					
+				}catch(SQLException e){
+					JOptionPane.showMessageDialog(null, e);
+				}
+				
+			}
+		});
+		comboBoxMotivo.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Diversos", "Fornecedor", "Funcion\u00E1rio", "Impostos"}));
+		comboBoxMotivo.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		comboBoxMotivo.setBounds(196, 55, 209, 28);
+		panelSaida.add(comboBoxMotivo);
+		
+		comboBoxDescricaoMotivo = new JComboBox();
+		comboBoxDescricaoMotivo.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		comboBoxDescricaoMotivo.setBounds(417, 55, 241, 28);
+		panelSaida.add(comboBoxDescricaoMotivo);
+		
+		panel_1 = new JPanel();
 		tabbedPane.addTab("Consulta", null, panel_1, null);		
 		panel_1.setLayout(null);
 		
@@ -340,7 +409,25 @@ public class TelaPrincipal extends JFrame {
 		comboBox.setBounds(35, 54, 169, 22);
 		panel_1.add(comboBox);
 		
+		buttonPesquisar = new JButton("");
+		buttonPesquisar.setToolTipText("Pesquisar");
+		buttonPesquisar.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/search.png")));
+		buttonPesquisar.setBounds(50, 24, 51, 41);
+		contentPane.add(buttonPesquisar);
+		
+		JButton button = new JButton("");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				dispose();
+			}
+		});
+		button.setToolTipText("Sair");
+		button.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/exit.png")));
+		button.setBounds(99, 24, 51, 41);
+		contentPane.add(button);
+		
 		//formatarCPF();
 		buscaMateriaPrima();
+		
 	}
 }

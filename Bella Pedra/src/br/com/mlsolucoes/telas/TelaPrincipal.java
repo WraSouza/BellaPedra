@@ -26,6 +26,7 @@ import br.com.mlsolucoes.classes.ConectaBanco;
 import javax.swing.JTextField;
 import javax.swing.JFormattedTextField;
 import java.awt.event.ItemListener;
+import java.util.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.awt.event.ItemEvent;
@@ -50,6 +51,7 @@ public class TelaPrincipal extends JFrame {
 	private JComboBox comboBoxDescricaoMotivo;
 	private JComboBox comboBoxMotivo;
 	private JComboBox comboBoxMateriaPrima;
+	private JComboBox comboBoxOpcaoDesejada;
 	private JFormattedTextField formattedTextFieldValorEntrada;
 	private JDateChooser dateChooserEntrada;
 	private JDateChooser dateChooserSaida;
@@ -58,6 +60,7 @@ public class TelaPrincipal extends JFrame {
 	private JButton btnSalvar;
 	private JButton buttonPesquisar;
 	private JTextField textFieldObsSaida;
+	private JMenu mnAdicionar;
 
 	/**
 	 * Launch the application.
@@ -117,7 +120,7 @@ public class TelaPrincipal extends JFrame {
 			buttonPesquisar.setEnabled(true);
 		}else {
 			buttonPesquisar.setEnabled(false);
-			
+			mnAdicionar.setEnabled(false);
 		}
 		
 	}
@@ -134,6 +137,47 @@ public class TelaPrincipal extends JFrame {
 		contentPane.setLayout(null);
 		
 		btnSalvar = new JButton("");
+		btnSalvar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				String opcaoDesejada = (String)comboBoxOpcaoDesejada.getSelectedItem();
+				
+				if(opcaoDesejada=="Selecione Uma Opção"){
+					JOptionPane.showMessageDialog(null, "Selecione Uma Opção");
+				}else if(opcaoDesejada=="Entrada"){
+					
+					String cpf_cnpj = formattedTextFieldCPF.getText();
+					String nomeCliente = textFieldNomeCliente.getText();
+					String nomeProduto = textFieldProduto.getText();
+					String materiaPrima = (String)comboBoxMateriaPrima.getSelectedItem();
+					String valor = formattedTextFieldValorEntrada.getText();
+					Date data = (Date) dateChooserEntrada.getDate();
+				
+					//Verifica se todos os campos de "ENTRADA" estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
+					if((cpf_cnpj=="")||(nomeCliente=="")||(nomeProduto=="")||(materiaPrima=="Selecione Um Item")||(valor=="")||(data==null)){
+						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
+					}else{
+						//Manda dados para serem inseridos no banco de dados
+					}					
+					
+				}//Fim do if para opção "Entrada"
+				else if(opcaoDesejada=="Saída"){
+					
+					String valorSaida = formattedTextFieldValorSaida.getText();
+					String motivo = (String)comboBoxMotivo.getSelectedItem();
+					Date data = (Date)dateChooserSaida.getDate();
+					
+					//Verifica se todos os campos estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
+					if((valorSaida=="")||(motivo=="Selecione Uma Opção")||(data==null)){
+						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
+					}else{
+						//Envia dados a serem gravados no banco de dados
+					}
+				}
+				
+				
+			}
+		});
 		btnSalvar.setBackground(SystemColor.menu);
 		btnSalvar.setToolTipText("Salvar");
 		btnSalvar.setIcon(new ImageIcon("C:\\Users\\wladi\\Downloads\\save.png"));
@@ -145,12 +189,29 @@ public class TelaPrincipal extends JFrame {
 		contentPane.add(menuBar);
 		
 		JMenu mnArquivo = new JMenu("Arquivo");
+		mnArquivo.setFont(new Font("Segoe UI", Font.PLAIN, 17));
 		menuBar.add(mnArquivo);
 		
+		mnAdicionar = new JMenu("Adicionar");
+		mnAdicionar.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+		mnArquivo.add(mnAdicionar);
+		
+		JMenuItem mntmAdicionarFuncionrio = new JMenuItem("Adicionar Funcion\u00E1rio");
+		mntmAdicionarFuncionrio.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				TelaFuncionario novaTelaFuncionario = new TelaFuncionario();
+				novaTelaFuncionario.setVisible(true);
+			}
+		});
+		mntmAdicionarFuncionrio.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+		mnAdicionar.add(mntmAdicionarFuncionrio);
+		
 		JMenu mnSobre = new JMenu("Sobre");
+		mnSobre.setFont(new Font("Segoe UI", Font.PLAIN, 17));
 		menuBar.add(mnSobre);
 		
 		JMenuItem mntmSobreAAplicao = new JMenuItem("Sobre a Aplica\u00E7\u00E3o");
+		mntmSobreAAplicao.setFont(new Font("Segoe UI", Font.PLAIN, 17));
 		mntmSobreAAplicao.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				TelaSobre novaTelaSobre = new TelaSobre();
@@ -173,7 +234,7 @@ public class TelaPrincipal extends JFrame {
 		lblInserirUmaNova.setBounds(31, 23, 186, 16);
 		panel.add(lblInserirUmaNova);
 		
-		JComboBox comboBoxOpcaoDesejada = new JComboBox();
+		comboBoxOpcaoDesejada = new JComboBox();
 		comboBoxOpcaoDesejada.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent arg0) {
 				
@@ -430,16 +491,22 @@ public class TelaPrincipal extends JFrame {
 		buttonPesquisar.setBounds(50, 24, 51, 41);
 		contentPane.add(buttonPesquisar);
 		
-		JButton button = new JButton("");
-		button.addActionListener(new ActionListener() {
+		JButton buttonSair = new JButton("");
+		buttonSair.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				dispose();
 			}
 		});
-		button.setToolTipText("Sair");
-		button.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/exit.png")));
-		button.setBounds(99, 24, 51, 41);
-		contentPane.add(button);
+		buttonSair.setToolTipText("Sair");
+		buttonSair.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/exit.png")));
+		buttonSair.setBounds(148, 24, 51, 41);
+		contentPane.add(buttonSair);
+		
+		JButton buttonAlerta = new JButton("");
+		buttonAlerta.setToolTipText("Gerar Alerta");
+		buttonAlerta.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/alarm.png")));
+		buttonAlerta.setBounds(99, 24, 51, 41);
+		contentPane.add(buttonAlerta);
 		
 		//formatarCPF();
 		buscaMateriaPrima();

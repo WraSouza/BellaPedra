@@ -22,6 +22,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.text.MaskFormatter;
 
 import br.com.mlsolucoes.classes.ConectaBanco;
+import br.com.mlsolucoes.classes.Produto;
 
 import javax.swing.JTextField;
 import javax.swing.JFormattedTextField;
@@ -31,6 +32,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.awt.event.ItemEvent;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import com.toedter.calendar.JDateChooser;
@@ -47,11 +50,11 @@ public class TelaPrincipal extends JFrame {
 	private JTextField textFieldNomeCliente;
 	private JPanel panelEntrada;
 	private JPanel panelSaida;
-	private JTextField textFieldProduto;
 	private JComboBox comboBoxDescricaoMotivo;
 	private JComboBox comboBoxMotivo;
 	private JComboBox comboBoxMateriaPrima;
 	private JComboBox comboBoxOpcaoDesejada;
+	private JComboBox comboBoxProduto;
 	private JFormattedTextField formattedTextFieldValorEntrada;
 	private JDateChooser dateChooserEntrada;
 	private JDateChooser dateChooserSaida;
@@ -109,6 +112,27 @@ public class TelaPrincipal extends JFrame {
 			JOptionPane.showMessageDialog(null, e);
 		}		
 		
+	}//Fim do método de buscar matéria-prima
+	
+	public void buscaProduto(){
+		
+		ResultSet rs = null;
+		
+		try{
+			ConectaBanco conecta = new ConectaBanco();
+			conecta.conectaBanco();
+			
+			String buscaProduto = "select * from produto";
+			rs = conecta.stm.executeQuery(buscaProduto);
+			
+			while(rs.next()){
+			comboBoxProduto.addItem(rs.getString("produtoNome"));
+			}
+			
+		}catch(SQLException e){
+			JOptionPane.showMessageDialog(null, e);
+		}	
+		
 	}
 	
 	public void recebeLogin(String login){
@@ -148,13 +172,13 @@ public class TelaPrincipal extends JFrame {
 					
 					String cpf_cnpj = formattedTextFieldCPF.getText();
 					String nomeCliente = textFieldNomeCliente.getText();
-					String nomeProduto = textFieldProduto.getText();
+					String nomeProduto = (String)comboBoxProduto.getSelectedItem();
 					String materiaPrima = (String)comboBoxMateriaPrima.getSelectedItem();
 					String valor = formattedTextFieldValorEntrada.getText();
 					Date data = (Date) dateChooserEntrada.getDate();
 				
 					//Verifica se todos os campos de "ENTRADA" estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
-					if((cpf_cnpj=="")||(nomeCliente=="")||(nomeProduto=="")||(materiaPrima=="Selecione Um Item")||(valor=="")||(data==null)){
+					if((cpf_cnpj=="")||(nomeCliente=="")||(nomeProduto=="Selecione Produto")||(materiaPrima=="Selecione Um Item")||(valor=="")||(data==null)){
 						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
 					}else{
 						//Manda dados para serem inseridos no banco de dados
@@ -206,6 +230,33 @@ public class TelaPrincipal extends JFrame {
 		mntmAdicionarFuncionrio.setFont(new Font("Segoe UI", Font.PLAIN, 17));
 		mnAdicionar.add(mntmAdicionarFuncionrio);
 		
+		JMenuItem mntmAdicionarProduto = new JMenuItem("Adicionar Produto");
+		mntmAdicionarProduto.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+		mntmAdicionarProduto.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				Produto novoProduto = new Produto();
+				boolean verifica = false;
+				//UIManager.put("OptionPane.messageFont", new Font("Arial", Font.PLAIN, 18));
+				String nomeProduto = JOptionPane.showInputDialog("Insira Novo Produto");
+				
+				if(nomeProduto==null){
+					
+				}else{
+					verifica = novoProduto.verificaProduto(nomeProduto);
+					
+					if(verifica){
+						JOptionPane.showMessageDialog(null, "Produto Já Cadastrado");
+					}else{
+						novoProduto.setNomeProduto(nomeProduto);
+						novoProduto.insereProduto();
+						JOptionPane.showMessageDialog(null, "Produto Cadastrado Com Sucesso");
+					}
+				}				
+			}
+		});
+		mnAdicionar.add(mntmAdicionarProduto);
+		
 		JMenu mnSobre = new JMenu("Sobre");
 		mnSobre.setFont(new Font("Segoe UI", Font.PLAIN, 17));
 		menuBar.add(mnSobre);
@@ -246,7 +297,7 @@ public class TelaPrincipal extends JFrame {
 					panelEntrada.setEnabled(true);
 					formattedTextFieldCPF.setEditable(true);
 					textFieldNomeCliente.setEditable(true);
-					textFieldProduto.setEditable(true);
+					comboBoxProduto.setEnabled(true);
 					comboBoxMateriaPrima.setEnabled(true);
 					formattedTextFieldValorEntrada.setEditable(true);
 					dateChooserEntrada.setEnabled(true);
@@ -263,7 +314,7 @@ public class TelaPrincipal extends JFrame {
 					panelEntrada.setEnabled(false);
 					formattedTextFieldCPF.setEditable(false);
 					textFieldNomeCliente.setEditable(false);
-					textFieldProduto.setEditable(false);
+					comboBoxProduto.setEnabled(false);
 					comboBoxMateriaPrima.setEnabled(false);;
 					formattedTextFieldValorEntrada.setEditable(false);
 					dateChooserEntrada.setEnabled(false);
@@ -314,15 +365,8 @@ public class TelaPrincipal extends JFrame {
 		
 		JLabel lblProduto = new JLabel("Produto");
 		lblProduto.setFont(new Font("Tahoma", Font.BOLD, 15));
-		lblProduto.setBounds(457, 26, 96, 16);
+		lblProduto.setBounds(453, 26, 96, 16);
 		panelEntrada.add(lblProduto);
-		
-		textFieldProduto = new JTextField();
-		textFieldProduto.setHorizontalAlignment(SwingConstants.RIGHT);
-		textFieldProduto.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		textFieldProduto.setBounds(457, 46, 162, 28);
-		panelEntrada.add(textFieldProduto);
-		textFieldProduto.setColumns(10);
 		
 		JLabel lblMatriaprima = new JLabel("Mat\u00E9ria-Prima");
 		lblMatriaprima.setFont(new Font("Tahoma", Font.BOLD, 15));
@@ -360,6 +404,12 @@ public class TelaPrincipal extends JFrame {
 		dateChooserEntrada.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		dateChooserEntrada.setBounds(218, 122, 182, 29);
 		panelEntrada.add(dateChooserEntrada);
+		
+		comboBoxProduto = new JComboBox();
+		comboBoxProduto.setModel(new DefaultComboBoxModel(new String[] {"Selecione Produto"}));
+		comboBoxProduto.setFont(new Font("Tahoma", Font.BOLD, 15));
+		comboBoxProduto.setBounds(453, 46, 162, 28);
+		panelEntrada.add(comboBoxProduto);
 		
 		panelSaida = new JPanel();
 		panelSaida.setBorder(new TitledBorder(null, "Sa\u00EDda", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -510,6 +560,7 @@ public class TelaPrincipal extends JFrame {
 		
 		//formatarCPF();
 		buscaMateriaPrima();
+		buscaProduto();
 		
 	}
 }

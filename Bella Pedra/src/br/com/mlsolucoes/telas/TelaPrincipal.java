@@ -22,6 +22,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.text.MaskFormatter;
 
 import br.com.mlsolucoes.classes.ConectaBanco;
+import br.com.mlsolucoes.classes.MateriaPrima;
 import br.com.mlsolucoes.classes.Produto;
 
 import javax.swing.JTextField;
@@ -256,6 +257,34 @@ public class TelaPrincipal extends JFrame {
 			}
 		});
 		mnAdicionar.add(mntmAdicionarProduto);
+		
+		JMenuItem mntmAdicionarMatriaprima = new JMenuItem("Adicionar Mat\u00E9ria-Prima");
+		mntmAdicionarMatriaprima.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				MateriaPrima novaMateriaPrima = new MateriaPrima();
+				boolean verifica = false;
+				UIManager.put("OptionPane.messageFont", new Font("Arial", Font.PLAIN, 18));
+				String nomeMateriaPrima = JOptionPane.showInputDialog("Insira Nova Matéria-Prima");
+				
+				if(nomeMateriaPrima==null){
+					
+				}else{
+					verifica = novaMateriaPrima.verificaMateriaPrima(nomeMateriaPrima);
+					
+					if(verifica){
+						JOptionPane.showMessageDialog(null, "Matéria-Prima Já Cadastrada");
+					}else{
+						novaMateriaPrima.setNomeMateriaPrima(nomeMateriaPrima);
+						novaMateriaPrima.insereMateriaPrima();
+						JOptionPane.showMessageDialog(null, "Matéria-Prima Cadastrada Com Sucesso");
+					}
+				}	
+				
+			}
+		});
+		mntmAdicionarMatriaprima.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+		mnAdicionar.add(mntmAdicionarMatriaprima);
 		
 		JMenu mnSobre = new JMenu("Sobre");
 		mnSobre.setFont(new Font("Segoe UI", Font.PLAIN, 17));

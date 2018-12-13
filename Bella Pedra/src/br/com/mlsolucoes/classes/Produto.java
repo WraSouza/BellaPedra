@@ -43,7 +43,7 @@ public class Produto {
 		
 		return verifica;		
 		
-	}//Fim do método de verificar placa.
+	}//Fim do método de verificar produto
 	
 	public void insereProduto(){
 		

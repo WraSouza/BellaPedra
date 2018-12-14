@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -22,6 +24,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.text.MaskFormatter;
 
 import br.com.mlsolucoes.classes.ConectaBanco;
+import br.com.mlsolucoes.classes.EntradaValor;
 import br.com.mlsolucoes.classes.MateriaPrima;
 import br.com.mlsolucoes.classes.Produto;
 
@@ -31,6 +34,7 @@ import java.awt.event.ItemListener;
 import java.util.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.awt.event.ItemEvent;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -65,6 +69,8 @@ public class TelaPrincipal extends JFrame {
 	private JButton buttonPesquisar;
 	private JTextField textFieldObsSaida;
 	private JMenu mnAdicionar;
+	private JLabel labelValorMensal;
+	private JLabel labelValorTotal;
 
 	/**
 	 * Launch the application.
@@ -146,6 +152,7 @@ public class TelaPrincipal extends JFrame {
 		}else {
 			buttonPesquisar.setEnabled(false);
 			mnAdicionar.setEnabled(false);
+			panelEntrada.setVisible(false);
 		}
 		
 	}
@@ -171,18 +178,36 @@ public class TelaPrincipal extends JFrame {
 					JOptionPane.showMessageDialog(null, "Selecione Uma Opção");
 				}else if(opcaoDesejada=="Entrada"){
 					
+					EntradaValor novaEntrada = new EntradaValor();
+					
+					LocalDate date = LocalDate.now();
 					String cpf_cnpj = formattedTextFieldCPF.getText();
 					String nomeCliente = textFieldNomeCliente.getText();
 					String nomeProduto = (String)comboBoxProduto.getSelectedItem();
 					String materiaPrima = (String)comboBoxMateriaPrima.getSelectedItem();
 					String valor = formattedTextFieldValorEntrada.getText();
-					Date data = (Date) dateChooserEntrada.getDate();
+					Date data = (Date)dateChooserEntrada.getDate();
+					Date dataSistema = java.sql.Date.valueOf(date);
 				
 					//Verifica se todos os campos de "ENTRADA" estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
 					if((cpf_cnpj=="")||(nomeCliente=="")||(nomeProduto=="Selecione Produto")||(materiaPrima=="Selecione Um Item")||(valor=="")||(data==null)){
 						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
 					}else{
 						//Manda dados para serem inseridos no banco de dados
+						//Compara se a data do pagamento é maior que a data de hoje. Se for maior, não muda o valor do mês pois ainda não foi pago.
+						if(data.compareTo(dataSistema)<0){
+							
+							//Envia os dados a serem inseridos no banco
+							novaEntrada.setDocumentoCliente(cpf_cnpj);
+							novaEntrada.setNomeCliente(nomeCliente);
+							novaEntrada.setNomeProduto(nomeProduto);
+							novaEntrada.setMateriaPrima(materiaPrima);
+							novaEntrada.setValorServico(Double.parseDouble(valor));
+							novaEntrada.setStatus("RECEBIDA");		
+							
+						}else {
+							
+						}
 					}					
 					
 				}//Fim do if para opção "Entrada"
@@ -408,9 +433,9 @@ public class TelaPrincipal extends JFrame {
 		comboBoxMateriaPrima.setBounds(649, 46, 175, 28);
 		panelEntrada.add(comboBoxMateriaPrima);
 		
-		JLabel lblValor = new JLabel("Valor");
+		JLabel lblValor = new JLabel("Valor(Ex: 120.35)");
 		lblValor.setFont(new Font("Tahoma", Font.BOLD, 15));
-		lblValor.setBounds(40, 102, 56, 16);
+		lblValor.setBounds(40, 102, 147, 16);
 		panelEntrada.add(lblValor);
 		
 		JLabel lblNewLabel = new JLabel("R$");
@@ -546,6 +571,28 @@ public class TelaPrincipal extends JFrame {
 		textFieldObsSaida.setBounds(34, 147, 624, 39);
 		panelSaida.add(textFieldObsSaida);
 		textFieldObsSaida.setColumns(10);
+		
+		JPanel panel_2 = new JPanel();
+		panel_2.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Valor Total R$", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panel_2.setBounds(350, 13, 237, 81);
+		panel.add(panel_2);
+		panel_2.setLayout(null);
+		
+		labelValorTotal = new JLabel("");
+		labelValorTotal.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		labelValorTotal.setBounds(12, 23, 213, 45);
+		panel_2.add(labelValorTotal);
+		
+		JPanel panel_3 = new JPanel();
+		panel_3.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Valor Mensal R$", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panel_3.setBounds(612, 13, 266, 80);
+		panel.add(panel_3);
+		panel_3.setLayout(null);
+		
+		labelValorMensal = new JLabel("");
+		labelValorMensal.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		labelValorMensal.setBounds(12, 24, 242, 43);
+		panel_3.add(labelValorMensal);
 		
 		panel_1 = new JPanel();
 		tabbedPane.addTab("Consulta", null, panel_1, null);		

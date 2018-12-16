@@ -64,7 +64,7 @@ public class EntradaValor {
 			ConectaBanco conecta = new ConectaBanco();
 			conecta.conectaBanco();
 			
-			String insereDados = "insert into servicoEntrada(?,?,?,?,?,?,?) values(?,?,?,?,?,?,?)";
+			String insereDados = "insert into servicoEntrada(documento,cliente,produto,materiaprima,valor,data,status) values(?,?,?,?,?,?,?)";
 			PreparedStatement stm = conecta.con.prepareStatement(insereDados);
 			
 			stm.setString(1, this.documentoCliente);

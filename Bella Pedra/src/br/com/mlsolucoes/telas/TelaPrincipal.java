@@ -26,6 +26,7 @@ import javax.swing.text.MaskFormatter;
 import br.com.mlsolucoes.classes.ConectaBanco;
 import br.com.mlsolucoes.classes.EntradaValor;
 import br.com.mlsolucoes.classes.MateriaPrima;
+import br.com.mlsolucoes.classes.Movimentacao;
 import br.com.mlsolucoes.classes.Produto;
 
 import javax.swing.JTextField;
@@ -140,7 +141,34 @@ public class TelaPrincipal extends JFrame {
 			JOptionPane.showMessageDialog(null, e);
 		}	
 		
-	}
+	}//fim do método de buscar produto
+	
+	public void verificaValorNoBanco(){
+		
+		ResultSet rs = null;		
+		
+		try{
+			ConectaBanco conecta = new ConectaBanco();
+			conecta.conectaBanco();
+			
+			String buscaValores = "select * from movimentacao";
+			rs = conecta.stm.executeQuery(buscaValores);			
+							
+				while(rs.next()){
+					
+					String valorMensal = String.valueOf(rs.getDouble("movimentacaoMensal"));
+					String valorTotal = String.valueOf(rs.getDouble("movimentacaoTotal"));
+					labelValorMensal.setText(String.valueOf(valorMensal));
+					labelValorTotal.setText(String.valueOf(valorTotal));	
+				}
+			
+			
+		}catch(SQLException e){
+			JOptionPane.showMessageDialog(null, e);
+		}		
+		
+	}//fim do método de verificar se existe valores no banco
+	
 	
 	public void recebeLogin(String login){
 		
@@ -152,7 +180,7 @@ public class TelaPrincipal extends JFrame {
 		}else {
 			buttonPesquisar.setEnabled(false);
 			mnAdicionar.setEnabled(false);
-			panelEntrada.setVisible(false);
+			labelValorTotal.setVisible(false);
 		}
 		
 	}
@@ -179,7 +207,7 @@ public class TelaPrincipal extends JFrame {
 				}else if(opcaoDesejada=="Entrada"){
 					
 					EntradaValor novaEntrada = new EntradaValor();
-					
+					ResultSet rs = null;
 					LocalDate date = LocalDate.now();
 					String cpf_cnpj = formattedTextFieldCPF.getText();
 					String nomeCliente = textFieldNomeCliente.getText();
@@ -187,23 +215,74 @@ public class TelaPrincipal extends JFrame {
 					String materiaPrima = (String)comboBoxMateriaPrima.getSelectedItem();
 					String valor = formattedTextFieldValorEntrada.getText();
 					Date data = (Date)dateChooserEntrada.getDate();
-					Date dataSistema = java.sql.Date.valueOf(date);
-				
+					Date dataSistema = java.sql.Date.valueOf(date);		
+					//Pega o Dia do Sistema
+					int dataCalendario = data.getDate();
+					int dataDoSistema = dataSistema.getDate();
+					
+					//Pega o mês
+					int mesCalendario = data.getMonth();
+					int mesAtual = dataSistema.getMonth();
+					
+					
 					//Verifica se todos os campos de "ENTRADA" estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
 					if((cpf_cnpj=="")||(nomeCliente=="")||(nomeProduto=="Selecione Produto")||(materiaPrima=="Selecione Um Item")||(valor=="")||(data==null)){
 						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
 					}else{
 						//Manda dados para serem inseridos no banco de dados
 						//Compara se a data do pagamento é maior que a data de hoje. Se for maior, não muda o valor do mês pois ainda não foi pago.
-						if(data.compareTo(dataSistema)<0){
+						if(dataCalendario<=dataDoSistema){
 							
 							//Envia os dados a serem inseridos no banco
 							novaEntrada.setDocumentoCliente(cpf_cnpj);
 							novaEntrada.setNomeCliente(nomeCliente);
 							novaEntrada.setNomeProduto(nomeProduto);
 							novaEntrada.setMateriaPrima(materiaPrima);
+							novaEntrada.setDataServico(data);
 							novaEntrada.setValorServico(Double.parseDouble(valor));
-							novaEntrada.setStatus("RECEBIDA");		
+							novaEntrada.setStatus("RECEBIDA");	
+							novaEntrada.insereEntrada();
+							JOptionPane.showMessageDialog(null, "Entrada de Valores Inserida com Sucesso");
+							cpf_cnpj = "";
+							nomeCliente = "";
+							
+							//Insere dados no banco da movimentação mensal
+							if(mesAtual==mesCalendario){
+								
+								Movimentacao movimentacao = new Movimentacao();	
+								String valorNoBancoMensal = labelValorMensal.getText();
+								String valorNoBancoTotal = labelValorTotal.getText();
+								
+								if(valorNoBancoMensal.isEmpty()){
+									movimentacao.setValorMensal(Double.parseDouble(valor));
+									movimentacao.setValorTotal(Double.parseDouble(valor));
+									movimentacao.setMes(mesAtual);
+									movimentacao.insereNovaMovimentacao();
+									labelValorMensal.setText(valor);
+									labelValorTotal.setText(valor);
+									cpf_cnpj = "";
+									nomeCliente = "";									
+									
+								}else{
+									Double valorTotal = Double.parseDouble(valor) + Double.parseDouble(valorNoBancoMensal);
+									movimentacao.setValorMensal(valorTotal);
+									movimentacao.setValorTotal(valorTotal);
+									movimentacao.setMes(mesAtual);
+									movimentacao.atualizaMovimentacao();
+									labelValorMensal.setText(String.valueOf(valorTotal));
+									labelValorTotal.setText(String.valueOf(valorTotal));
+									cpf_cnpj = "";
+									nomeCliente = "";
+								}
+								
+																
+								
+							}//atualiza valor mensal se os meses forem iguais.
+							//Se os meses forem diferentes
+							else{
+								//criar código aqui caso os meses sejam diferentes
+							}
+							
 							
 						}else {
 							
@@ -637,6 +716,7 @@ public class TelaPrincipal extends JFrame {
 		//formatarCPF();
 		buscaMateriaPrima();
 		buscaProduto();
+		verificaValorNoBanco();
 		
 	}
 }

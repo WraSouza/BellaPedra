@@ -35,7 +35,7 @@ public class Movimentacao {
 			ConectaBanco conecta = new ConectaBanco();
 			conecta.conectaBanco();
 			
-			String insereMovimentacao = "insert into movimentacao(?,?,?) values(?,?,?)";
+			String insereMovimentacao = "insert into movimentacao(movimentacaoTotal,movimentacaoMensal,mesAtual) values(?,?,?)";
 			PreparedStatement stm = conecta.con.prepareStatement(insereMovimentacao);
 			
 			stm.setDouble(1, this.valorTotal);

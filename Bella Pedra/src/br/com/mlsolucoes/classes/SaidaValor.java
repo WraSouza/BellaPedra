@@ -1,0 +1,73 @@
+package br.com.mlsolucoes.classes;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Date;
+
+import javax.swing.JOptionPane;
+
+public class SaidaValor {
+	
+	private double valorSaida;
+	private String motivo;
+	private String descricaoMotivo;
+	private Date dataSaida;
+	private String observacaoSaida;
+	public double getValorSaida() {
+		return valorSaida;
+	}
+	public void setValorSaida(double valorSaida) {
+		this.valorSaida = valorSaida;
+	}
+	public String getMotivo() {
+		return motivo;
+	}
+	public void setMotivo(String motivo) {
+		this.motivo = motivo;
+	}
+	public String getDescricaoMotivo() {
+		return descricaoMotivo;
+	}
+	public void setDescricaoMotivo(String descricaoMotivo) {
+		this.descricaoMotivo = descricaoMotivo;
+	}
+	public Date getDataSaida() {
+		return dataSaida;
+	}
+	public void setDataSaida(Date dataSaida) {
+		this.dataSaida = dataSaida;
+	}
+	public String getObservacaoSaida() {
+		return observacaoSaida;
+	}
+	public void setObservacaoSaida(String observacaoSaida) {
+		this.observacaoSaida = observacaoSaida;
+	}
+	
+	public void insereSaida(){
+		
+		try{
+			ConectaBanco conecta = new ConectaBanco();
+			conecta.conectaBanco();
+			
+			String insereValor = "insert into valorSaida(valorSaida,motivoSaida,descricaoMotivo,dataSaida,observacao) values(?,?,?,?,?)";
+			PreparedStatement stm = conecta.con.prepareStatement(insereValor);
+			
+			stm.setDouble(1, this.valorSaida);
+			stm.setString(2, this.motivo);
+			stm.setString(3, this.descricaoMotivo);
+			stm.setDate(4, new java.sql.Date(this.dataSaida.getTime()));
+			stm.setString(5, this.observacaoSaida);
+			stm.executeUpdate();
+			stm.close();
+			conecta.con.close();			
+			
+			
+		}catch(SQLException e){
+			JOptionPane.showMessageDialog(null, e);
+		}
+		
+		
+	}
+
+}

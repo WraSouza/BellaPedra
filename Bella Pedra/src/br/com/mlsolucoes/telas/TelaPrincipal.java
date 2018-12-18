@@ -12,6 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JToolBar;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JMenu;
@@ -23,11 +24,14 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.MaskFormatter;
 
+import br.com.mlsolucoes.classes.Ano;
 import br.com.mlsolucoes.classes.ConectaBanco;
 import br.com.mlsolucoes.classes.EntradaValor;
 import br.com.mlsolucoes.classes.MateriaPrima;
+import br.com.mlsolucoes.classes.Mes;
 import br.com.mlsolucoes.classes.Movimentacao;
 import br.com.mlsolucoes.classes.Produto;
+import br.com.mlsolucoes.classes.SaidaValor;
 
 import javax.swing.JTextField;
 import javax.swing.JFormattedTextField;
@@ -79,9 +83,10 @@ public class TelaPrincipal extends JFrame {
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
+				
 				try {					
 					TelaPrincipal frame = new TelaPrincipal();
-					frame.setVisible(true);						
+					frame.setVisible(true);		
 					
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -99,6 +104,15 @@ public class TelaPrincipal extends JFrame {
 			e.printStackTrace();
 		}		
 	}*/	
+	
+	private void verificaLabel(){
+		if(labelValorMensal.getText().isEmpty()){
+			labelValorMensal.setText("0.00");
+		}
+		if(labelValorTotal.getText().isEmpty()){
+			labelValorTotal.setText("0.00");
+		}
+	}
 	
 	private void buscaMateriaPrima(){
 		
@@ -145,23 +159,46 @@ public class TelaPrincipal extends JFrame {
 	
 	public void verificaValorNoBanco(){
 		
-		ResultSet rs = null;		
+		ResultSet rs = null;	
+		String valorMensal = null;
+		String valorTotal = null;
 		
 		try{
 			ConectaBanco conecta = new ConectaBanco();
 			conecta.conectaBanco();
 			
-			String buscaValores = "select * from movimentacao";
-			rs = conecta.stm.executeQuery(buscaValores);			
-							
+			LocalDate date = LocalDate.now();
+			Date dataSistema = java.sql.Date.valueOf(date);
+			int mesAtual = dataSistema.getMonth();
+			
+			String buscaValores = "select * from movimentacao where mesAtual = '"+mesAtual+"'";
+			rs = conecta.stm.executeQuery(buscaValores);				
+			
 				while(rs.next()){
 					
-					String valorMensal = String.valueOf(rs.getDouble("movimentacaoMensal"));
-					String valorTotal = String.valueOf(rs.getDouble("movimentacaoTotal"));
-					labelValorMensal.setText(String.valueOf(valorMensal));
-					labelValorTotal.setText(String.valueOf(valorTotal));	
-				}
-			
+					double valorDoMes = rs.getDouble("movimentacaoMensal");
+					double totalValor = rs.getDouble("movimentacaoTotal");
+					
+					if(valorDoMes<0){
+						labelValorMensal.setForeground(Color.red);
+						labelValorMensal.setText(String.valueOf(valorDoMes));
+					}else{
+						labelValorMensal.setForeground(Color.black);
+						labelValorMensal.setText(String.valueOf(valorDoMes));
+					}
+					if(totalValor<0){
+						labelValorTotal.setForeground(Color.red);
+						labelValorTotal.setText(String.valueOf(totalValor));
+					}else{
+						labelValorTotal.setForeground(Color.black);
+						labelValorTotal.setText(String.valueOf(totalValor));
+					}
+					
+					 //valorMensal = String.valueOf(valorDoMes);
+					// valorTotal = String.valueOf(totalValor);					
+					
+					
+				}//Fim do while
 			
 		}catch(SQLException e){
 			JOptionPane.showMessageDialog(null, e);
@@ -201,12 +238,17 @@ public class TelaPrincipal extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				
 				String opcaoDesejada = (String)comboBoxOpcaoDesejada.getSelectedItem();
+				int dataCalendario = 0;
+				int mesCalendario = 0;
+				int anoAtual = 0;
 				
 				if(opcaoDesejada=="Selecione Uma Opção"){
 					JOptionPane.showMessageDialog(null, "Selecione Uma Opção");
 				}else if(opcaoDesejada=="Entrada"){
 					
 					EntradaValor novaEntrada = new EntradaValor();
+					Mes mes = new Mes();
+					Ano ano = new Ano();
 					ResultSet rs = null;
 					LocalDate date = LocalDate.now();
 					String cpf_cnpj = formattedTextFieldCPF.getText();
@@ -217,14 +259,21 @@ public class TelaPrincipal extends JFrame {
 					Date data = (Date)dateChooserEntrada.getDate();
 					Date dataSistema = java.sql.Date.valueOf(date);		
 					//Pega o Dia do Sistema
-					int dataCalendario = data.getDate();
+					if(data==null){
+						
+					}else{
+					 dataCalendario = data.getDate();
+					 mesCalendario = data.getMonth();
+					 anoAtual = data.getYear()+1900;
+					}
 					int dataDoSistema = dataSistema.getDate();
 					
-					//Pega o mês
-					int mesCalendario = data.getMonth();
-					int mesAtual = dataSistema.getMonth();
+					//Pega o mês do banco de dados					
+					int mesAtual = mes.retornaMes();
 					
-					
+					//Pega o ano do banco
+					int anoDoBanco = ano.retornaAno();
+
 					//Verifica se todos os campos de "ENTRADA" estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
 					if((cpf_cnpj=="")||(nomeCliente=="")||(nomeProduto=="Selecione Produto")||(materiaPrima=="Selecione Um Item")||(valor=="")||(data==null)){
 						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
@@ -242,49 +291,69 @@ public class TelaPrincipal extends JFrame {
 							novaEntrada.setValorServico(Double.parseDouble(valor));
 							novaEntrada.setStatus("RECEBIDA");	
 							novaEntrada.insereEntrada();
-							JOptionPane.showMessageDialog(null, "Entrada de Valores Inserida com Sucesso");
-							cpf_cnpj = "";
-							nomeCliente = "";
+							JOptionPane.showMessageDialog(null, "Entrada de Valores Inserida com Sucesso");							
+							formattedTextFieldCPF.setText("");
+							textFieldNomeCliente.setText("");
 							
 							//Insere dados no banco da movimentação mensal
-							if(mesAtual==mesCalendario){
+							if((mesAtual==mesCalendario)&&(anoAtual==anoDoBanco)){
 								
 								Movimentacao movimentacao = new Movimentacao();	
 								String valorNoBancoMensal = labelValorMensal.getText();
 								String valorNoBancoTotal = labelValorTotal.getText();
-								
-								if(valorNoBancoMensal.isEmpty()){
+											
+								if(valorNoBancoMensal.equals("0.00")){
 									movimentacao.setValorMensal(Double.parseDouble(valor));
 									movimentacao.setValorTotal(Double.parseDouble(valor));
 									movimentacao.setMes(mesAtual);
+									movimentacao.setAno(anoAtual);
 									movimentacao.insereNovaMovimentacao();
 									labelValorMensal.setText(valor);
-									labelValorTotal.setText(valor);
-									cpf_cnpj = "";
-									nomeCliente = "";									
+									labelValorTotal.setText(valor);						
 									
 								}else{
 									Double valorTotal = Double.parseDouble(valor) + Double.parseDouble(valorNoBancoMensal);
 									movimentacao.setValorMensal(valorTotal);
 									movimentacao.setValorTotal(valorTotal);
 									movimentacao.setMes(mesAtual);
+									movimentacao.setAno(anoAtual);
 									movimentacao.atualizaMovimentacao();
-									labelValorMensal.setText(String.valueOf(valorTotal));
-									labelValorTotal.setText(String.valueOf(valorTotal));
-									cpf_cnpj = "";
-									nomeCliente = "";
-								}
-								
-																
+									if(valorTotal<0){
+										labelValorMensal.setText(String.valueOf(valorTotal));
+										labelValorMensal.setForeground(Color.red);
+										labelValorTotal.setText(String.valueOf(valorTotal));
+										labelValorTotal.setForeground(Color.red);
+									}else{
+										labelValorMensal.setForeground(Color.black);
+										labelValorTotal.setForeground(Color.black);
+										labelValorMensal.setText(String.valueOf(valorTotal));
+										labelValorTotal.setText(String.valueOf(valorTotal));
+									}								
+									
+								}																
 								
 							}//atualiza valor mensal se os meses forem iguais.
 							//Se os meses forem diferentes
-							else{
-								//criar código aqui caso os meses sejam diferentes
-							}
-							
-							
-						}else {
+							else{						
+								Movimentacao movimentacao = new Movimentacao();
+								movimentacao.setValorMensal(Double.parseDouble(valor));
+								movimentacao.setValorTotal(Double.parseDouble(valor));
+								movimentacao.setMes(mesCalendario);
+								movimentacao.setAno(anoAtual);
+								movimentacao.insereNovaMovimentacao();
+								if(Double.parseDouble(valor)<0){
+									labelValorMensal.setForeground(Color.red);
+									labelValorTotal.setForeground(Color.red);
+									labelValorMensal.setText(valor);
+									labelValorTotal.setText(valor);	
+								}else{
+									labelValorMensal.setForeground(Color.black);
+									labelValorTotal.setForeground(Color.black);
+									labelValorMensal.setText(valor);
+									labelValorTotal.setText(valor);	
+								}
+													
+							}							
 							
 						}
 					}					
@@ -292,18 +361,121 @@ public class TelaPrincipal extends JFrame {
 				}//Fim do if para opção "Entrada"
 				else if(opcaoDesejada=="Saída"){
 					
+					Mes mes = new Mes();
+					Ano ano = new Ano();
 					String valorSaida = formattedTextFieldValorSaida.getText();
 					String motivo = (String)comboBoxMotivo.getSelectedItem();
 					Date data = (Date)dateChooserSaida.getDate();
+					String obs = textFieldObsSaida.getText();
+					String descricaoMotivo = (String)comboBoxDescricaoMotivo.getSelectedItem();
+					
+					//Pega data do Calendário Selecionado
+					Date dataDoCalendario = dateChooserSaida.getDate();
+					
+					if(dataDoCalendario==null){
+						
+					}else{
+					 dataCalendario = dataDoCalendario.getDate();
+					 mesCalendario = dataDoCalendario.getMonth();
+					 anoAtual = dataDoCalendario.getYear()+1900;
+					}			
+					
+					//Pega o mês do banco de dados					
+					int mesAtual = mes.retornaMes();
+					
+					//Pega o ano do banco
+					int anoDoBanco = ano.retornaAno();
 					
 					//Verifica se todos os campos estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
 					if((valorSaida=="")||(motivo=="Selecione Uma Opção")||(data==null)){
 						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
 					}else{
+						
+						SaidaValor novaSaida = new SaidaValor();						
+						Movimentacao movimentacao = new Movimentacao();	
+						String valorNoBancoMensal = labelValorMensal.getText();
+						String valorNoBancoTotal = labelValorTotal.getText();
+						
 						//Envia dados a serem gravados no banco de dados
+						novaSaida.setValorSaida(Double.parseDouble(valorSaida));
+						novaSaida.setMotivo(motivo);
+						novaSaida.setDescricaoMotivo(descricaoMotivo);
+						novaSaida.setDataSaida(data);
+						novaSaida.setObservacaoSaida(obs);
+						novaSaida.insereSaida();
+						JOptionPane.showMessageDialog(null, "Saída de Valores Realizada Com Sucesso");
+						textFieldObsSaida.setText("");
+						formattedTextFieldValorSaida.setText("");
+								
+									
+						//envia dados a serem inseridos ou atualizados em movimentação
+						if((mesCalendario==mesAtual)&&(anoAtual==anoDoBanco)){
+						if(valorNoBancoMensal.equals("0.00")){
+							
+							movimentacao.setValorMensal(Double.parseDouble(valorSaida));
+							movimentacao.setValorTotal(Double.parseDouble(valorSaida));
+							movimentacao.setMes(mesCalendario);
+							movimentacao.setAno(anoAtual);
+							movimentacao.insereNovaMovimentacao();
+							if(Double.parseDouble(valorSaida)<0){
+								labelValorMensal.setText(valorSaida);
+								labelValorTotal.setText(valorSaida);
+								labelValorMensal.setForeground(Color.red);
+								labelValorTotal.setForeground(Color.red);
+							}else{
+								labelValorMensal.setForeground(Color.black);
+								labelValorTotal.setForeground(Color.black);
+								labelValorMensal.setText(valorSaida);
+								labelValorTotal.setText(valorSaida);
+							}													
+							
+						}else{
+							Double valorTotal = Double.parseDouble(valorNoBancoMensal) - Double.parseDouble(valorSaida);
+							movimentacao.setValorMensal(valorTotal);
+							movimentacao.setValorTotal(valorTotal);
+							movimentacao.setMes(mesAtual);
+							movimentacao.setAno(anoAtual);
+							movimentacao.atualizaMovimentacao();
+							if(valorTotal<0){
+								labelValorMensal.setText(String.valueOf(valorTotal));
+								labelValorTotal.setText(String.valueOf(valorTotal));
+								labelValorMensal.setForeground(Color.red);
+								labelValorTotal.setForeground(Color.red);
+							}else{
+								labelValorMensal.setForeground(Color.black);
+								labelValorTotal.setForeground(Color.black);
+								labelValorMensal.setText(String.valueOf(valorTotal));
+								labelValorTotal.setText(String.valueOf(valorTotal));
+							}
+												
+						}						
+						}//fim do if caso o mês e o ano forem iguais
+						//Caso o mês e o ano forem diferentes
+						else{
+							
+							if(valorNoBancoMensal.equals("0.00")){							
+							movimentacao.setValorMensal(0-Double.parseDouble(valorSaida));
+							movimentacao.setValorTotal(0-Double.parseDouble(valorSaida));
+							movimentacao.setMes(mesCalendario);
+							movimentacao.setAno(anoAtual);
+							movimentacao.insereNovaMovimentacao();
+							double resultado = 0 - (Double.parseDouble(valorSaida));
+							if(resultado<0){
+								labelValorMensal.setText(String.valueOf(resultado));
+								labelValorTotal.setText(String.valueOf(resultado));
+								labelValorMensal.setForeground(Color.red);
+								labelValorTotal.setForeground(Color.red);
+							}else{
+								labelValorMensal.setForeground(Color.black);
+								labelValorTotal.setForeground(Color.black);
+								labelValorMensal.setText(String.valueOf(resultado));
+								labelValorTotal.setText(String.valueOf(resultado));
+							}
+							
+							}
+						}
 					}
-				}
-				
+				}//Fim do método caso a opção selecionada seja Saída				
 				
 			}
 		});
@@ -463,7 +635,7 @@ public class TelaPrincipal extends JFrame {
 			}
 		});
 		comboBoxOpcaoDesejada.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		comboBoxOpcaoDesejada.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Entrada", "Sa\u00EDda"}));
+		comboBoxOpcaoDesejada.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Contas a Pagar", "Entrada", "Sa\u00EDda"}));
 		comboBoxOpcaoDesejada.setBounds(31, 45, 211, 28);
 		panel.add(comboBoxOpcaoDesejada);
 		
@@ -717,6 +889,7 @@ public class TelaPrincipal extends JFrame {
 		buscaMateriaPrima();
 		buscaProduto();
 		verificaValorNoBanco();
+		verificaLabel();
 		
 	}
 }

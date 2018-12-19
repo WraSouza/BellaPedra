@@ -13,6 +13,14 @@ public class SaidaValor {
 	private String descricaoMotivo;
 	private Date dataSaida;
 	private String observacaoSaida;
+	private String status;
+		
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
 	public double getValorSaida() {
 		return valorSaida;
 	}
@@ -50,7 +58,7 @@ public class SaidaValor {
 			ConectaBanco conecta = new ConectaBanco();
 			conecta.conectaBanco();
 			
-			String insereValor = "insert into valorSaida(valorSaida,motivoSaida,descricaoMotivo,dataSaida,observacao) values(?,?,?,?,?)";
+			String insereValor = "insert into valorSaida(valorSaida,motivoSaida,descricaoMotivo,dataSaida,observacao,status) values(?,?,?,?,?,?)";
 			PreparedStatement stm = conecta.con.prepareStatement(insereValor);
 			
 			stm.setDouble(1, this.valorSaida);
@@ -58,6 +66,7 @@ public class SaidaValor {
 			stm.setString(3, this.descricaoMotivo);
 			stm.setDate(4, new java.sql.Date(this.dataSaida.getTime()));
 			stm.setString(5, this.observacaoSaida);
+			stm.setString(6, this.status);
 			stm.executeUpdate();
 			stm.close();
 			conecta.con.close();			

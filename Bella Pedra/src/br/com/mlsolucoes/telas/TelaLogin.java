@@ -19,6 +19,8 @@ import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.Date;
 import java.awt.event.ActionEvent;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
@@ -75,6 +77,13 @@ public class TelaLogin extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				
 				Login login = new Login();
+				ResultSet rs = null;
+				String status = "PENDENTE";
+				
+				//Pega a data do sistema
+				LocalDate date = LocalDate.now();
+				Date dataSistema = java.sql.Date.valueOf(date);
+				//int diaDoSistema = dataSistema.getDate();
 				
 				String usuario = textFieldUser.getText();
 				String senha = passwordField.getText();
@@ -87,9 +96,24 @@ public class TelaLogin extends JFrame {
 				
 				if(verificaUsuario){
 					TelaPrincipal novaTela = new TelaPrincipal();
-					novaTela.setVisible(true);
+					TelaContaPagar novaTelaConta = new TelaContaPagar();
 					
-					novaTela.recebeLogin(usuario);
+					//Verifica se existe contas a pagar no banco
+					String sql = "select * from contaPagar where statusConta = '"+status+"' and dataLembrarPagamento='"+dataSistema+"'";
+					rs = conecta.stm.executeQuery(sql);
+										
+					if(!rs.isBeforeFirst()){
+						JOptionPane.showMessageDialog(novaTelaConta, "Não Há Contas a Serem Pagas na Data de Hoje");
+						novaTela.setVisible(true);
+						
+					}else{
+					novaTela.setVisible(true);
+					novaTela.recebeLogin(usuario);	
+					
+					novaTelaConta.setVisible(true);
+					novaTelaConta.preencherTabela(sql);
+					
+					}
 					
 					dispose();
 				}else{
@@ -123,6 +147,14 @@ public class TelaLogin extends JFrame {
 		passwordField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent evt) {
+               
+				String status = "PENDENTE";
+				ResultSet RS = null;
+				
+				//Pega a data do sistema
+				LocalDate date = LocalDate.now();
+				Date dataSistema = java.sql.Date.valueOf(date);
+				//int diaDoSistema = dataSistema.getDate();
 				
 				if(evt.getKeyCode()==KeyEvent.VK_ENTER){
 					try{
@@ -141,12 +173,30 @@ public class TelaLogin extends JFrame {
 				        if((loginusuario.equals(rs.getString("loginUser")))&&(senhaUsuario.equals(rs.getString("loginSenha"))))
 				        {				            				            
 				                JOptionPane.showMessageDialog(null, "Acesso Autorizado");
+				                
 				                //Chamar Tela de Opções  
 				                 textFieldUser.setText("");
 				                    passwordField.setText("");                    
 				                    TelaPrincipal telaopcoes = new TelaPrincipal();
-				                    telaopcoes.setVisible(true);
-				                    telaopcoes.recebeLogin(loginusuario);
+				                    TelaContaPagar novaConta = new TelaContaPagar();
+									
+									//Verifica se existe contas a pagar no banco
+									String sql = "select * from contaPagar where statusConta = '"+status+"' and dataLembrarPagamento='"+dataSistema+"'";
+									rs = conecta.stm.executeQuery(sql);
+														
+									if(!rs.isBeforeFirst()){
+										JOptionPane.showMessageDialog(null, "Não Há Contas a Serem Pagas na Data de Hoje");
+										telaopcoes.setVisible(true);
+										
+									}else{
+									telaopcoes.setVisible(true);
+									telaopcoes.recebeLogin(loginusuario);	
+									
+									novaConta.setVisible(true);
+									novaConta.preencherTabela(sql);
+									
+									}
+				                   
 				                    dispose();				                
 				            
 				        }else{

@@ -26,6 +26,7 @@ import javax.swing.text.MaskFormatter;
 
 import br.com.mlsolucoes.classes.Ano;
 import br.com.mlsolucoes.classes.ConectaBanco;
+import br.com.mlsolucoes.classes.ContaPagar;
 import br.com.mlsolucoes.classes.EntradaValor;
 import br.com.mlsolucoes.classes.MateriaPrima;
 import br.com.mlsolucoes.classes.Mes;
@@ -67,6 +68,7 @@ public class TelaPrincipal extends JFrame {
 	private JComboBox comboBoxProduto;
 	private JFormattedTextField formattedTextFieldValorEntrada;
 	private JDateChooser dateChooserEntrada;
+	private JDateChooser dateChooserAvisoPagar;
 	private JDateChooser dateChooserSaida;
 	private String user;
 	private JPanel panel_1;
@@ -87,6 +89,8 @@ public class TelaPrincipal extends JFrame {
 				try {					
 					TelaPrincipal frame = new TelaPrincipal();
 					frame.setVisible(true);		
+					frame.setResizable(false);
+					frame.setLocationRelativeTo(null);
 					
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -94,16 +98,6 @@ public class TelaPrincipal extends JFrame {
 			}
 		});
 	}
-	/**
-	private void formatarCPF(){
-		try {
-			MaskFormatter mask = new MaskFormatter("###.###.###-##");
-			mask.install(formattedTextFieldCPF);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}		
-	}*/	
 	
 	private void verificaLabel(){
 		if(labelValorMensal.getText().isEmpty()){
@@ -112,7 +106,8 @@ public class TelaPrincipal extends JFrame {
 		if(labelValorTotal.getText().isEmpty()){
 			labelValorTotal.setText("0.00");
 		}
-	}
+	}//Fim do método de verificar label
+	
 	
 	private void buscaMateriaPrima(){
 		
@@ -192,11 +187,7 @@ public class TelaPrincipal extends JFrame {
 					}else{
 						labelValorTotal.setForeground(Color.black);
 						labelValorTotal.setText(String.valueOf(totalValor));
-					}
-					
-					 //valorMensal = String.valueOf(valorDoMes);
-					// valorTotal = String.valueOf(totalValor);					
-					
+					}					
 					
 				}//Fim do while
 			
@@ -220,7 +211,7 @@ public class TelaPrincipal extends JFrame {
 			labelValorTotal.setVisible(false);
 		}
 		
-	}
+	}//método que verifica qual usuário se logou no sistema.
 
 	/**
 	 * Create the frame.
@@ -402,6 +393,7 @@ public class TelaPrincipal extends JFrame {
 						novaSaida.setDescricaoMotivo(descricaoMotivo);
 						novaSaida.setDataSaida(data);
 						novaSaida.setObservacaoSaida(obs);
+						novaSaida.setStatus("PAGA");
 						novaSaida.insereSaida();
 						JOptionPane.showMessageDialog(null, "Saída de Valores Realizada Com Sucesso");
 						textFieldObsSaida.setText("");
@@ -475,7 +467,36 @@ public class TelaPrincipal extends JFrame {
 							}
 						}
 					}
-				}//Fim do método caso a opção selecionada seja Saída				
+				}//Fim do método caso a opção selecionada seja Saída	
+				else if(opcaoDesejada=="Contas a Pagar"){
+					
+					String valor = formattedTextFieldValorSaida.getText();
+					String motivo = (String)comboBoxMotivo.getSelectedItem();
+					String descricaoMotivo = (String)comboBoxDescricaoMotivo.getSelectedItem();
+					Date data = (Date)dateChooserSaida.getDate();
+					Date dataLembrarPagamento = (Date)dateChooserAvisoPagar.getDate();
+					String observacao = textFieldObsSaida.getText();
+					
+					if((valor.isEmpty())||(motivo=="Selecione Uma Opção")||(data==null)){
+						JOptionPane.showMessageDialog(null, "Informe os Campos Necessários");
+					}else{
+						ContaPagar novaContaPagar = new ContaPagar();
+						novaContaPagar.setValorConta(Double.parseDouble(valor));
+						novaContaPagar.setMotivo(motivo);
+						novaContaPagar.setDescricaoMotivo(descricaoMotivo);
+						novaContaPagar.setDataPagamento(data);
+						novaContaPagar.setDataLembrar(dataLembrarPagamento);
+						novaContaPagar.setObservacao(observacao);
+						novaContaPagar.setStatus("PENDENTE");
+						novaContaPagar.insereNovoPagamento();
+						JOptionPane.showMessageDialog(null, "Conta Inserida com Sucesso");
+						formattedTextFieldValorSaida.setText("");
+						textFieldObsSaida.setText("");
+						
+					}//Caso os campos estejam todos preenchidos
+					
+					
+				}//fim do if caso a opção seja contas a pagar
 				
 			}
 		});
@@ -514,7 +535,9 @@ public class TelaPrincipal extends JFrame {
 				
 				Produto novoProduto = new Produto();
 				boolean verifica = false;
-				//UIManager.put("OptionPane.messageFont", new Font("Arial", Font.PLAIN, 18));
+				ResultSet rs = null;
+				comboBoxProduto.removeAllItems();
+				UIManager.put("OptionPane.messageFont", new Font("Tahoma", Font.PLAIN, 18));
 				String nomeProduto = JOptionPane.showInputDialog("Insira Novo Produto");
 				
 				if(nomeProduto==null){
@@ -529,7 +552,22 @@ public class TelaPrincipal extends JFrame {
 						novoProduto.insereProduto();
 						JOptionPane.showMessageDialog(null, "Produto Cadastrado Com Sucesso");
 					}
-				}				
+				}	
+				
+				try{
+					ConectaBanco conecta = new ConectaBanco();
+					conecta.conectaBanco();
+					
+					String buscaProduto = "select * from produto";
+					rs = conecta.stm.executeQuery(buscaProduto);
+					
+					while(rs.next()){
+						comboBoxProduto.addItem(rs.getString("produtoNome"));
+					}
+					
+				}catch(SQLException e){
+					JOptionPane.showMessageDialog(null, e);
+				}
 			}
 		});
 		mnAdicionar.add(mntmAdicionarProduto);
@@ -540,7 +578,9 @@ public class TelaPrincipal extends JFrame {
 				
 				MateriaPrima novaMateriaPrima = new MateriaPrima();
 				boolean verifica = false;
-				UIManager.put("OptionPane.messageFont", new Font("Arial", Font.PLAIN, 18));
+				ResultSet rs = null;
+				comboBoxMateriaPrima.removeAllItems();
+				UIManager.put("OptionPane.messageFont", new Font("Tahoma", Font.PLAIN, 18));
 				String nomeMateriaPrima = JOptionPane.showInputDialog("Insira Nova Matéria-Prima");
 				
 				if(nomeMateriaPrima==null){
@@ -556,6 +596,21 @@ public class TelaPrincipal extends JFrame {
 						JOptionPane.showMessageDialog(null, "Matéria-Prima Cadastrada Com Sucesso");
 					}
 				}	
+				
+				try{
+					ConectaBanco conecta = new ConectaBanco();
+					conecta.conectaBanco();
+					
+					String buscaMateriaPrima = "select * from materiaprima";
+					rs = conecta.stm.executeQuery(buscaMateriaPrima);
+					
+					while(rs.next()){
+						comboBoxMateriaPrima.addItem(rs.getString("nomeMateriaPrima"));
+					}
+					
+				}catch(SQLException e){
+					JOptionPane.showMessageDialog(null, e);
+				}
 				
 			}
 		});
@@ -613,8 +668,26 @@ public class TelaPrincipal extends JFrame {
 					comboBoxMotivo.setEnabled(false);
 					dateChooserSaida.setEnabled(false);		
 					textFieldObsSaida.setEditable(false);
+					dateChooserAvisoPagar.setEnabled(false);
 					
 				}else if(opcaoDesejada=="Saída"){
+					//desabilita componentes do painel de Entrada
+					panelEntrada.setEnabled(false);
+					formattedTextFieldCPF.setEditable(false);
+					textFieldNomeCliente.setEditable(false);
+					comboBoxProduto.setEnabled(false);
+					comboBoxMateriaPrima.setEnabled(false);;
+					formattedTextFieldValorEntrada.setEditable(false);
+					dateChooserEntrada.setEnabled(false);
+					dateChooserAvisoPagar.setEnabled(false);
+					
+					//habilita componentes do painel de Saída
+					panelSaida.setEnabled(true);
+					formattedTextFieldValorSaida.setEditable(true);
+					comboBoxMotivo.setEnabled(true);
+					dateChooserSaida.setEnabled(true);	
+					textFieldObsSaida.setEditable(true);
+				}else if(opcaoDesejada=="Contas a Pagar"){
 					//desabilita componentes do painel de Entrada
 					panelEntrada.setEnabled(false);
 					formattedTextFieldCPF.setEditable(false);
@@ -630,6 +703,7 @@ public class TelaPrincipal extends JFrame {
 					comboBoxMotivo.setEnabled(true);
 					dateChooserSaida.setEnabled(true);	
 					textFieldObsSaida.setEditable(true);
+					dateChooserAvisoPagar.setEnabled(true);
 				}
 				
 			}
@@ -793,6 +867,17 @@ public class TelaPrincipal extends JFrame {
 							comboBoxDescricaoMotivo.addItem(rs.getString("empresaNome"));
 						}
 						
+					}else if(opcaoEscolhida=="Funcionário"){
+						
+						String status = "Ativo";
+						
+						String buscaFuncionario = "select * from funcionarios where funcionarioStatus = '"+status+"'";
+						rs = conecta.stm.executeQuery(buscaFuncionario);
+						
+						while(rs.next()){
+							comboBoxDescricaoMotivo.addItem(rs.getString("funcionarioNome"));
+						}
+						
 					}
 					
 				}catch(SQLException e){
@@ -819,9 +904,19 @@ public class TelaPrincipal extends JFrame {
 		textFieldObsSaida = new JTextField();
 		textFieldObsSaida.setHorizontalAlignment(SwingConstants.RIGHT);
 		textFieldObsSaida.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		textFieldObsSaida.setBounds(34, 147, 624, 39);
+		textFieldObsSaida.setBounds(34, 147, 448, 39);
 		panelSaida.add(textFieldObsSaida);
 		textFieldObsSaida.setColumns(10);
+		
+		JLabel lblDataDoAviso = new JLabel("Data do Aviso ");
+		lblDataDoAviso.setFont(new Font("Tahoma", Font.BOLD, 15));
+		lblDataDoAviso.setBounds(688, 119, 166, 16);
+		panelSaida.add(lblDataDoAviso);
+		
+		dateChooserAvisoPagar = new JDateChooser();
+		dateChooserAvisoPagar.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		dateChooserAvisoPagar.setBounds(686, 142, 168, 30);
+		panelSaida.add(dateChooserAvisoPagar);
 		
 		JPanel panel_2 = new JPanel();
 		panel_2.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Valor Total R$", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
@@ -885,11 +980,11 @@ public class TelaPrincipal extends JFrame {
 		buttonAlerta.setBounds(99, 24, 51, 41);
 		contentPane.add(buttonAlerta);
 		
-		//formatarCPF();
 		buscaMateriaPrima();
 		buscaProduto();
 		verificaValorNoBanco();
 		verificaLabel();
+		//verificaContasPagar();
 		
 	}
 }

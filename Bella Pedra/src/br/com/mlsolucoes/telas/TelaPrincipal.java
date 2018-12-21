@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -11,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JMenuBar;
@@ -30,6 +32,7 @@ import br.com.mlsolucoes.classes.ContaPagar;
 import br.com.mlsolucoes.classes.EntradaValor;
 import br.com.mlsolucoes.classes.MateriaPrima;
 import br.com.mlsolucoes.classes.Mes;
+import br.com.mlsolucoes.classes.ModeloTabela;
 import br.com.mlsolucoes.classes.Movimentacao;
 import br.com.mlsolucoes.classes.Produto;
 import br.com.mlsolucoes.classes.SaidaValor;
@@ -37,6 +40,7 @@ import br.com.mlsolucoes.classes.SaidaValor;
 import javax.swing.JTextField;
 import javax.swing.JFormattedTextField;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
 import java.util.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -52,6 +56,10 @@ import com.toedter.calendar.JCalendar;
 import java.awt.Color;
 import java.awt.SystemColor;
 import javax.swing.JMenuItem;
+import javax.swing.JTable;
+import javax.swing.JScrollPane;
+import com.toedter.calendar.JMonthChooser;
+import com.toedter.calendar.JYearChooser;
 
 public class TelaPrincipal extends JFrame {
 
@@ -78,6 +86,10 @@ public class TelaPrincipal extends JFrame {
 	private JMenu mnAdicionar;
 	private JLabel labelValorMensal;
 	private JLabel labelValorTotal;
+	private JLabel labelTotal;
+	private JTable table;
+	private JMonthChooser monthChooser;
+	private JYearChooser yearChooser;
 
 	/**
 	 * Launch the application.
@@ -107,6 +119,60 @@ public class TelaPrincipal extends JFrame {
 			labelValorTotal.setText("0.00");
 		}
 	}//Fim do método de verificar label
+	
+public void preencherTabela(String sql){
+		
+		ResultSet rs = null;
+		ArrayList dados = new ArrayList();
+		String[] colunas = new String[]{"Motivo","Descricao","Valor","Data do Pagamento"};
+		String dataFormatada = null;	
+		int mesSelecionado = monthChooser.getMonth();
+		int anoSelecionado = yearChooser.getYear();
+		Date dataBanco = null;
+		int mesBanco;
+		int anoBanco;
+		double valorTotal = 0;
+		
+		try{
+			ConectaBanco conecta = new ConectaBanco();
+			conecta.conectaBanco();
+			
+			rs = conecta.stm.executeQuery(sql);
+				
+			while(rs.next()){
+				dataBanco = rs.getDate("dataSaida");
+				mesBanco = dataBanco.getMonth();
+				anoBanco = dataBanco.getYear()+1900;
+				
+				if((mesSelecionado==mesBanco)&&(anoSelecionado==anoBanco)){				
+				valorTotal = valorTotal + rs.getDouble("valorSaida");
+			dataBanco = rs.getDate("dataSaida");
+			SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
+			dataFormatada = formato.format(dataBanco);
+			dados.add(new Object[]{rs.getString("descricaoMotivo"),rs.getString("observacao"),rs.getDouble("valorSaida"),dataFormatada});
+				}
+			
+			}//fim do while
+			labelTotal.setText(String.valueOf(valorTotal));
+			
+		}catch(SQLException e){
+			JOptionPane.showMessageDialog(null, e);
+		}
+		
+		ModeloTabela modelo = new ModeloTabela(dados, colunas);
+		table.setModel(modelo);
+		table.getColumnModel().getColumn(0).setPreferredWidth(210);
+		table.getColumnModel().getColumn(0).setResizable(false);
+		table.getColumnModel().getColumn(1).setPreferredWidth(210);
+		table.getColumnModel().getColumn(1).setResizable(false);
+		table.getColumnModel().getColumn(2).setPreferredWidth(210);
+		table.getColumnModel().getColumn(2).setResizable(false);
+		table.getColumnModel().getColumn(3).setPreferredWidth(210);
+		table.getColumnModel().getColumn(3).setResizable(false);
+		table.getTableHeader().setReorderingAllowed(false);
+		table.setAutoResizeMode(table.AUTO_RESIZE_OFF);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	}//Fim do método de preencher a tabela com os valores pesquisados
 	
 	
 	private void buscaMateriaPrima(){
@@ -206,6 +272,7 @@ public class TelaPrincipal extends JFrame {
 			btnSalvar.setEnabled(true);
 			buttonPesquisar.setEnabled(true);
 		}else {
+			System.out.println("Usuário = "+user);
 			buttonPesquisar.setEnabled(false);
 			mnAdicionar.setEnabled(false);
 			labelValorTotal.setVisible(false);
@@ -666,6 +733,7 @@ public class TelaPrincipal extends JFrame {
 					panelSaida.setEnabled(false);
 					formattedTextFieldValorSaida.setEditable(false);
 					comboBoxMotivo.setEnabled(false);
+					comboBoxDescricaoMotivo.setEnabled(false);
 					dateChooserSaida.setEnabled(false);		
 					textFieldObsSaida.setEditable(false);
 					dateChooserAvisoPagar.setEnabled(false);
@@ -944,20 +1012,79 @@ public class TelaPrincipal extends JFrame {
 		tabbedPane.addTab("Consulta", null, panel_1, null);		
 		panel_1.setLayout(null);
 		
-		JLabel label = new JLabel("");
-		label.setBounds(0, 0, 902, 433);
-		panel_1.add(label);
-		
 		JLabel lblPesquisarPor = new JLabel("Pesquisar Por:");
 		lblPesquisarPor.setFont(new Font("Tahoma", Font.BOLD, 15));
 		lblPesquisarPor.setBounds(35, 32, 144, 16);
 		panel_1.add(lblPesquisarPor);
 		
-		JComboBox comboBox = new JComboBox();
-		comboBox.setBounds(35, 54, 169, 22);
-		panel_1.add(comboBox);
+		JComboBox comboBoxpesquisaPor = new JComboBox();
+		comboBoxpesquisaPor.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Diversos", "Fornecedor ", "Funcion\u00E1rio", "Impostos"}));
+		comboBoxpesquisaPor.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		comboBoxpesquisaPor.setBounds(35, 54, 204, 28);
+		panel_1.add(comboBoxpesquisaPor);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(41, 119, 849, 279);
+		panel_1.add(scrollPane);
+		
+		table = new JTable();
+		scrollPane.setViewportView(table);
+		table.setFont(new Font("Tahoma", Font.PLAIN, 17));
+		
+		JPanel panel_4 = new JPanel();
+		panel_4.setBorder(new TitledBorder(null, "Total R$", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel_4.setBounds(658, 426, 221, 99);
+		panel_1.add(panel_4);
+		panel_4.setLayout(null);
+		
+		labelTotal = new JLabel("");
+		labelTotal.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		labelTotal.setBounds(12, 13, 197, 73);
+		panel_4.add(labelTotal);
+		
+		JLabel lblPerodo = new JLabel("Per\u00EDodo");
+		lblPerodo.setFont(new Font("Tahoma", Font.BOLD, 15));
+		lblPerodo.setBounds(258, 32, 110, 16);
+		panel_1.add(lblPerodo);
+		
+		monthChooser = new JMonthChooser();
+		monthChooser.getComboBox().setFont(new Font("Tahoma", Font.PLAIN, 18));
+		monthChooser.setBounds(258, 54, 149, 28);
+		panel_1.add(monthChooser);
+		
+		yearChooser = new JYearChooser();
+		yearChooser.getSpinner().setFont(new Font("Tahoma", Font.BOLD, 18));
+		yearChooser.setBounds(419, 48, 100, 34);
+		panel_1.add(yearChooser);
 		
 		buttonPesquisar = new JButton("");
+		buttonPesquisar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				ResultSet rs = null;
+
+				String opcaoDesejada = (String)comboBoxpesquisaPor.getSelectedItem();
+				int mesSelecionado = monthChooser.getMonth();
+				int anoSelecionado = yearChooser.getYear();
+				Date dataDoBanco = null;
+				int mesBanco;
+				int anoBanco;
+				String sql = null;
+				
+				try{
+					ConectaBanco conecta = new ConectaBanco();
+					conecta.conectaBanco();
+					
+					String buscaData = "select * from valorSaida where motivoSaida = '"+opcaoDesejada+"'";	
+					preencherTabela(buscaData);
+					
+					
+				}catch(SQLException e){
+					JOptionPane.showMessageDialog(null, e);
+				}
+				
+			}
+		});
 		buttonPesquisar.setToolTipText("Pesquisar");
 		buttonPesquisar.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/search.png")));
 		buttonPesquisar.setBounds(50, 24, 51, 41);
@@ -971,14 +1098,37 @@ public class TelaPrincipal extends JFrame {
 		});
 		buttonSair.setToolTipText("Sair");
 		buttonSair.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/exit.png")));
-		buttonSair.setBounds(148, 24, 51, 41);
+		buttonSair.setBounds(150, 24, 51, 41);
 		contentPane.add(buttonSair);
 		
-		JButton buttonAlerta = new JButton("");
-		buttonAlerta.setToolTipText("Gerar Alerta");
-		buttonAlerta.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/alarm.png")));
-		buttonAlerta.setBounds(99, 24, 51, 41);
-		contentPane.add(buttonAlerta);
+		JButton buttonAtualizar = new JButton("");
+		buttonAtualizar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				ResultSet rs = null;
+				comboBoxDescricaoMotivo.removeAllItems();
+				
+				try{
+					ConectaBanco conecta = new ConectaBanco();
+					conecta.conectaBanco();
+					
+					String buscaFuncionario = "select * from funcionarios";
+					rs = conecta.stm.executeQuery(buscaFuncionario);
+					
+					while(rs.next()){
+						comboBoxDescricaoMotivo.addItem(rs.getString("funcionarioNome"));
+					}
+					
+				}catch(SQLException e){
+					JOptionPane.showMessageDialog(null, e);
+				}
+				
+			}
+		});
+		buttonAtualizar.setToolTipText("Atualizar");
+		buttonAtualizar.setIcon(new ImageIcon(TelaPrincipal.class.getResource("/br/com/mlsolucoes/imagens/reload.png")));
+		buttonAtualizar.setBounds(100, 24, 51, 41);
+		contentPane.add(buttonAtualizar);
 		
 		buscaMateriaPrima();
 		buscaProduto();

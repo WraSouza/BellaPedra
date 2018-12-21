@@ -187,6 +187,7 @@ public class TelaLogin extends JFrame {
 									if(!rs.isBeforeFirst()){
 										JOptionPane.showMessageDialog(null, "Não Há Contas a Serem Pagas na Data de Hoje");
 										telaopcoes.setVisible(true);
+										telaopcoes.recebeLogin(loginusuario);
 										
 									}else{
 									telaopcoes.setVisible(true);
@@ -194,6 +195,8 @@ public class TelaLogin extends JFrame {
 									
 									novaConta.setVisible(true);
 									novaConta.preencherTabela(sql);
+									
+									telaopcoes.recebeLogin(loginusuario);
 									
 									}
 				                   

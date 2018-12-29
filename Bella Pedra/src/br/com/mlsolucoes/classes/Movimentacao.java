@@ -66,7 +66,7 @@ public class Movimentacao {
 			ConectaBanco conecta = new ConectaBanco();
 			conecta.conectaBanco();
 			
-			String atualizaMovimentacao = "update movimentacao set movimentacaoTotal=?, movimentacaoMensal=?, mesAtual=?,ano=?";
+			String atualizaMovimentacao = "update movimentacao set movimentacaoTotal=?, movimentacaoMensal=?, mesAtual=?,ano=? where mesAtual = '"+mes+"'";
 			PreparedStatement stm = conecta.con.prepareStatement(atualizaMovimentacao);
 			
 			stm.setDouble(1, this.valorTotal);

@@ -103,13 +103,14 @@ public class TelaLogin extends JFrame {
 					rs = conecta.stm.executeQuery(sql);
 										
 					if(!rs.isBeforeFirst()){
-						JOptionPane.showMessageDialog(novaTelaConta, "Não Há Contas a Serem Pagas na Data de Hoje");
+
 						novaTela.setVisible(true);
 						
 					}else{
+						
 					novaTela.setVisible(true);
 					novaTela.recebeLogin(usuario);	
-					
+					JOptionPane.showMessageDialog(null, "Há Contas a Serem Pagas");
 					novaTelaConta.setVisible(true);
 					novaTelaConta.preencherTabela(sql);
 					
@@ -185,13 +186,16 @@ public class TelaLogin extends JFrame {
 									rs = conecta.stm.executeQuery(sql);
 														
 									if(!rs.isBeforeFirst()){
-										JOptionPane.showMessageDialog(null, "Não Há Contas a Serem Pagas na Data de Hoje");
+										
 										telaopcoes.setVisible(true);
 										telaopcoes.recebeLogin(loginusuario);
 										
 									}else{
+										
 									telaopcoes.setVisible(true);
 									telaopcoes.recebeLogin(loginusuario);	
+									
+									JOptionPane.showMessageDialog(null, "Há Contas a Serem Pagas");
 									
 									novaConta.setVisible(true);
 									novaConta.preencherTabela(sql);

@@ -111,14 +111,6 @@ public class TelaPrincipal extends JFrame {
 		});
 	}
 	
-	private void verificaLabel(){
-		if(labelValorMensal.getText().isEmpty()){
-			labelValorMensal.setText("0.00");
-		}
-		if(labelValorTotal.getText().isEmpty()){
-			labelValorTotal.setText("0.00");
-		}
-	}//Fim do método de verificar label
 	
 public void preencherTabela(String sql){
 		
@@ -221,8 +213,11 @@ public void preencherTabela(String sql){
 	public void verificaValorNoBanco(){
 		
 		ResultSet rs = null;	
+		ResultSet RS = null;
 		String valorMensal = null;
 		String valorTotal = null;
+		String valorTotalAnterior;
+		double valorMesAnterior = 0;
 		
 		try{
 			ConectaBanco conecta = new ConectaBanco();
@@ -231,12 +226,36 @@ public void preencherTabela(String sql){
 			LocalDate date = LocalDate.now();
 			Date dataSistema = java.sql.Date.valueOf(date);
 			int mesAtual = dataSistema.getMonth();
+			int anoAtual = dataSistema.getYear()+1900;
+			double valorAnterior = 0;
+						
+			String buscaAno = "select * from movimentacao where mesAtual = '"+mesAtual+"' and ano = '"+anoAtual+"'";
+			rs = conecta.stm.executeQuery(buscaAno);			
 			
-			String buscaValores = "select * from movimentacao where mesAtual = '"+mesAtual+"'";
-			rs = conecta.stm.executeQuery(buscaValores);				
-			
+			if(!rs.isBeforeFirst()){				
+				
+				if(mesAtual==0){				
+				labelValorMensal.setText("0.00");
+				labelValorTotal.setText("0.00");
+				}else{
+					String buscaValorBanco = "select * from movimentacao where mesAtual = '"+(mesAtual-1)+"' and ano = '"+anoAtual+"'";
+					rs = conecta.stm.executeQuery(buscaValorBanco);
+					labelValorMensal.setText("0.00");
+					while(rs.next()){
+						valorAnterior = rs.getDouble("movimentacaoTotal");						
+					}
+					if(valorAnterior==0){
+						labelValorTotal.setText("0.00");
+					}else{
+					labelValorTotal.setText(String.valueOf(valorAnterior));
+					}
+				}
+				
+			}else{
+				
 				while(rs.next()){
 					
+					if(mesAtual==0){					
 					double valorDoMes = rs.getDouble("movimentacaoMensal");
 					double totalValor = rs.getDouble("movimentacaoTotal");
 					
@@ -254,8 +273,37 @@ public void preencherTabela(String sql){
 						labelValorTotal.setForeground(Color.black);
 						labelValorTotal.setText(String.valueOf(totalValor));
 					}					
-					
+					}else{
+						
+						String buscaValorAnterior = "select * from movimentacao where mesAtual = '"+mesAtual+"' and ano = '"+anoAtual+"'";
+						rs = conecta.stm.executeQuery(buscaValorAnterior);
+						
+						while(rs.next()){
+							valorMensal = String.valueOf(rs.getDouble("movimentacaoMensal"));
+							valorTotal = String.valueOf(rs.getDouble("movimentacaoTotal"));
+							labelValorMensal.setText(valorMensal);
+							labelValorTotal.setText(String.valueOf(rs.getDouble("movimentacaoTotal")));
+							if(Double.parseDouble(valorMensal)<0){
+							labelValorMensal.setText(String.valueOf(valorMensal));
+							labelValorMensal.setForeground(Color.red);
+							}else{
+								labelValorMensal.setForeground(Color.black);
+								labelValorMensal.setText(String.valueOf(valorMensal));
+							}
+							if(Double.parseDouble(valorTotal)<0){
+								labelValorTotal.setText(String.valueOf(valorTotal));
+								labelValorTotal.setForeground(Color.red);
+								}else{
+									labelValorTotal.setForeground(Color.black);
+									labelValorTotal.setText(String.valueOf(valorTotal));
+								}
+							
+							
+						}
+						
+					}//fim do if_else caso o mês seja diferente de janeiro
 				}//Fim do while
+			}
 			
 		}catch(SQLException e){
 			JOptionPane.showMessageDialog(null, e);
@@ -272,7 +320,6 @@ public void preencherTabela(String sql){
 			btnSalvar.setEnabled(true);
 			buttonPesquisar.setEnabled(true);
 		}else {
-			System.out.println("Usuário = "+user);
 			buttonPesquisar.setEnabled(false);
 			mnAdicionar.setEnabled(false);
 			labelValorTotal.setVisible(false);
@@ -316,6 +363,7 @@ public void preencherTabela(String sql){
 					String valor = formattedTextFieldValorEntrada.getText();
 					Date data = (Date)dateChooserEntrada.getDate();
 					Date dataSistema = java.sql.Date.valueOf(date);		
+					
 					//Pega o Dia do Sistema
 					if(data==null){
 						
@@ -335,11 +383,8 @@ public void preencherTabela(String sql){
 					//Verifica se todos os campos de "ENTRADA" estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
 					if((cpf_cnpj=="")||(nomeCliente=="")||(nomeProduto=="Selecione Produto")||(materiaPrima=="Selecione Um Item")||(valor=="")||(data==null)){
 						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
-					}else{
-						//Manda dados para serem inseridos no banco de dados
-						//Compara se a data do pagamento é maior que a data de hoje. Se for maior, não muda o valor do mês pois ainda não foi pago.
-						if(dataCalendario<=dataDoSistema){
-							
+						
+					}else{							
 							//Envia os dados a serem inseridos no banco
 							novaEntrada.setDocumentoCliente(cpf_cnpj);
 							novaEntrada.setNomeCliente(nomeCliente);
@@ -354,7 +399,6 @@ public void preencherTabela(String sql){
 							textFieldNomeCliente.setText("");
 							
 							//Insere dados no banco da movimentação mensal
-							if((mesAtual==mesCalendario)&&(anoAtual==anoDoBanco)){
 								
 								Movimentacao movimentacao = new Movimentacao();	
 								String valorNoBancoMensal = labelValorMensal.getText();
@@ -362,59 +406,41 @@ public void preencherTabela(String sql){
 											
 								if(valorNoBancoMensal.equals("0.00")){
 									movimentacao.setValorMensal(Double.parseDouble(valor));
-									movimentacao.setValorTotal(Double.parseDouble(valor));
-									movimentacao.setMes(mesAtual);
+									double valorTotal = Double.parseDouble(valorNoBancoTotal) + Double.parseDouble(valor);
+									movimentacao.setValorTotal(valorTotal);
+									movimentacao.setMes(mesCalendario);
 									movimentacao.setAno(anoAtual);
 									movimentacao.insereNovaMovimentacao();
 									labelValorMensal.setText(valor);
-									labelValorTotal.setText(valor);						
+									labelValorTotal.setText(String.valueOf(valorTotal));										
 									
 								}else{
-									Double valorTotal = Double.parseDouble(valor) + Double.parseDouble(valorNoBancoMensal);
-									movimentacao.setValorMensal(valorTotal);
+									Double valorTotal = Double.parseDouble(valor) + Double.parseDouble(valorNoBancoTotal);
+									Double valorMensal = Double.parseDouble(valor) + Double.parseDouble(valorNoBancoMensal);
+									movimentacao.setValorMensal(valorMensal);
 									movimentacao.setValorTotal(valorTotal);
-									movimentacao.setMes(mesAtual);
+									movimentacao.setMes(mesCalendario);
 									movimentacao.setAno(anoAtual);
 									movimentacao.atualizaMovimentacao();
 									if(valorTotal<0){
-										labelValorMensal.setText(String.valueOf(valorTotal));
-										labelValorMensal.setForeground(Color.red);
 										labelValorTotal.setText(String.valueOf(valorTotal));
 										labelValorTotal.setForeground(Color.red);
 									}else{
-										labelValorMensal.setForeground(Color.black);
-										labelValorTotal.setForeground(Color.black);
-										labelValorMensal.setText(String.valueOf(valorTotal));
+										
+										labelValorTotal.setForeground(Color.black);										
 										labelValorTotal.setText(String.valueOf(valorTotal));
-									}								
-									
-								}																
-								
-							}//atualiza valor mensal se os meses forem iguais.
-							//Se os meses forem diferentes
-							else{						
-								Movimentacao movimentacao = new Movimentacao();
-								movimentacao.setValorMensal(Double.parseDouble(valor));
-								movimentacao.setValorTotal(Double.parseDouble(valor));
-								movimentacao.setMes(mesCalendario);
-								movimentacao.setAno(anoAtual);
-								movimentacao.insereNovaMovimentacao();
-								if(Double.parseDouble(valor)<0){
-									labelValorMensal.setForeground(Color.red);
-									labelValorTotal.setForeground(Color.red);
-									labelValorMensal.setText(valor);
-									labelValorTotal.setText(valor);	
-								}else{
-									labelValorMensal.setForeground(Color.black);
-									labelValorTotal.setForeground(Color.black);
-									labelValorMensal.setText(valor);
-									labelValorTotal.setText(valor);	
-								}
+									}	
+									if(valorMensal<0){
+										labelValorMensal.setText(String.valueOf(valorMensal));
+										labelValorMensal.setForeground(Color.red);
+										
+									}else{
+										labelValorMensal.setForeground(Color.black);										
+										labelValorMensal.setText(String.valueOf(valorMensal));	
+									}																
+								}							
 													
-							}							
-							
-						}
-					}					
+							}//Fim do else													
 					
 				}//Fim do if para opção "Entrada"
 				else if(opcaoDesejada=="Saída"){
@@ -468,72 +494,50 @@ public void preencherTabela(String sql){
 								
 									
 						//envia dados a serem inseridos ou atualizados em movimentação
-						if((mesCalendario==mesAtual)&&(anoAtual==anoDoBanco)){
 						if(valorNoBancoMensal.equals("0.00")){
 							
 							movimentacao.setValorMensal(Double.parseDouble(valorSaida));
-							movimentacao.setValorTotal(Double.parseDouble(valorSaida));
+							double valorTotal = Double.parseDouble(valorNoBancoTotal) + Double.parseDouble(valorSaida);
+							movimentacao.setValorTotal(valorTotal);
 							movimentacao.setMes(mesCalendario);
 							movimentacao.setAno(anoAtual);
 							movimentacao.insereNovaMovimentacao();
 							if(Double.parseDouble(valorSaida)<0){
 								labelValorMensal.setText(valorSaida);
-								labelValorTotal.setText(valorSaida);
 								labelValorMensal.setForeground(Color.red);
+								labelValorTotal.setText(valorSaida);
 								labelValorTotal.setForeground(Color.red);
 							}else{
-								labelValorMensal.setForeground(Color.black);
-								labelValorTotal.setForeground(Color.black);
-								labelValorMensal.setText(valorSaida);
+								labelValorMensal.setForeground(Color.black);								
+								labelValorMensal.setText(valorSaida);	
 								labelValorTotal.setText(valorSaida);
+								labelValorTotal.setForeground(Color.red);
 							}													
 							
 						}else{
-							Double valorTotal = Double.parseDouble(valorNoBancoMensal) - Double.parseDouble(valorSaida);
-							movimentacao.setValorMensal(valorTotal);
+							Double valorMensal = Double.parseDouble(valorNoBancoMensal) - Double.parseDouble(valorSaida);
+							Double valorTotal = Double.parseDouble(valorNoBancoTotal) - Double.parseDouble(valorSaida);
+							movimentacao.setValorMensal(valorMensal);
 							movimentacao.setValorTotal(valorTotal);
 							movimentacao.setMes(mesAtual);
 							movimentacao.setAno(anoAtual);
 							movimentacao.atualizaMovimentacao();
-							if(valorTotal<0){
-								labelValorMensal.setText(String.valueOf(valorTotal));
-								labelValorTotal.setText(String.valueOf(valorTotal));
-								labelValorMensal.setForeground(Color.red);
+							if(valorTotal<0){								
+								labelValorTotal.setText(String.valueOf(valorTotal));								
 								labelValorTotal.setForeground(Color.red);
-							}else{
-								labelValorMensal.setForeground(Color.black);
-								labelValorTotal.setForeground(Color.black);
-								labelValorMensal.setText(String.valueOf(valorTotal));
+							}else{								
+								labelValorTotal.setForeground(Color.black);								
 								labelValorTotal.setText(String.valueOf(valorTotal));
 							}
-												
-						}						
-						}//fim do if caso o mês e o ano forem iguais
-						//Caso o mês e o ano forem diferentes
-						else{
-							
-							if(valorNoBancoMensal.equals("0.00")){							
-							movimentacao.setValorMensal(0-Double.parseDouble(valorSaida));
-							movimentacao.setValorTotal(0-Double.parseDouble(valorSaida));
-							movimentacao.setMes(mesCalendario);
-							movimentacao.setAno(anoAtual);
-							movimentacao.insereNovaMovimentacao();
-							double resultado = 0 - (Double.parseDouble(valorSaida));
-							if(resultado<0){
-								labelValorMensal.setText(String.valueOf(resultado));
-								labelValorTotal.setText(String.valueOf(resultado));
+							if(valorMensal<0){								
+								labelValorMensal.setText(String.valueOf(valorMensal));								
 								labelValorMensal.setForeground(Color.red);
-								labelValorTotal.setForeground(Color.red);
-							}else{
-								labelValorMensal.setForeground(Color.black);
-								labelValorTotal.setForeground(Color.black);
-								labelValorMensal.setText(String.valueOf(resultado));
-								labelValorTotal.setText(String.valueOf(resultado));
+							}else{								
+								labelValorMensal.setForeground(Color.black);								
+								labelValorMensal.setText(String.valueOf(valorMensal));
 							}
-							
-							}
+						}				
 						}
-					}
 				}//Fim do método caso a opção selecionada seja Saída	
 				else if(opcaoDesejada=="Contas a Pagar"){
 					
@@ -1133,7 +1137,6 @@ public void preencherTabela(String sql){
 		buscaMateriaPrima();
 		buscaProduto();
 		verificaValorNoBanco();
-		verificaLabel();
 		//verificaContasPagar();
 		
 	}

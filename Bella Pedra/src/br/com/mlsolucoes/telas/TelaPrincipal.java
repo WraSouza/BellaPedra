@@ -3,6 +3,7 @@ package br.com.mlsolucoes.telas;
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -41,6 +42,7 @@ import br.com.mlsolucoes.classes.SaidaValor;
 import javax.swing.JTextField;
 import javax.swing.JFormattedTextField;
 import java.awt.event.ItemListener;
+import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -165,12 +167,13 @@ public void preencherTabela(String sql){
 		
 		ModeloTabela modelo = new ModeloTabela(dados, colunas);
 		table.setModel(modelo);
-		table.getColumnModel().getColumn(0).setPreferredWidth(210);
-		table.getColumnModel().getColumn(0).setResizable(false);
+		
+		table.getColumnModel().getColumn(0).setPreferredWidth(210);		
+		table.getColumnModel().getColumn(0).setResizable(false);		
 		table.getColumnModel().getColumn(1).setPreferredWidth(210);
-		table.getColumnModel().getColumn(1).setResizable(false);
+		table.getColumnModel().getColumn(1).setResizable(false);		
 		table.getColumnModel().getColumn(2).setPreferredWidth(210);
-		table.getColumnModel().getColumn(2).setResizable(false);
+		table.getColumnModel().getColumn(2).setResizable(false);		
 		table.getColumnModel().getColumn(3).setPreferredWidth(210);
 		table.getColumnModel().getColumn(3).setResizable(false);
 		table.getTableHeader().setReorderingAllowed(false);
@@ -417,6 +420,7 @@ public void preencherTabelaEntrada(String sql){
 				int dataCalendario = 0;
 				int mesCalendario = 0;
 				int anoAtual = 0;
+				boolean verificaInsercao;
 				
 				if(opcaoDesejada=="Selecione Uma Opção"){
 					JOptionPane.showMessageDialog(null, "Selecione Uma Opção");
@@ -464,17 +468,18 @@ public void preencherTabelaEntrada(String sql){
 							novaEntrada.setDataServico(data);
 							novaEntrada.setValorServico(Double.parseDouble(valor));
 							novaEntrada.setStatus("RECEBIDA");	
-							novaEntrada.insereEntrada();
-							JOptionPane.showMessageDialog(null, "Entrada de Valores Inserida com Sucesso");							
+							verificaInsercao = novaEntrada.insereEntrada();
+														
 							formattedTextFieldCPF.setText("");
 							textFieldNomeCliente.setText("");
 							
 							//Insere dados no banco da movimentação mensal
-								
+							
 								Movimentacao movimentacao = new Movimentacao();	
 								String valorNoBancoMensal = labelValorMensal.getText();
 								String valorNoBancoTotal = labelValorTotal.getText();
-											
+								
+								if(verificaInsercao==true){
 								if(valorNoBancoMensal.equals("0.00")){
 									movimentacao.setValorMensal(Double.parseDouble(valor));
 									double valorTotal = Double.parseDouble(valorNoBancoTotal) + Double.parseDouble(valor);
@@ -510,7 +515,7 @@ public void preencherTabelaEntrada(String sql){
 										labelValorMensal.setText(String.valueOf(valorMensal));	
 									}																
 								}							
-													
+							  }				
 							}//Fim do else													
 					
 				}//Fim do if para opção "Entrada"
@@ -519,6 +524,7 @@ public void preencherTabelaEntrada(String sql){
 					double valorTotal;
 					Mes mes = new Mes();
 					Ano ano = new Ano();
+					boolean verificaResultado;
 					String valorSaida = formattedTextFieldValorSaida.getText();
 					String motivo = (String)comboBoxMotivo.getSelectedItem();
 					Date data = (Date)dateChooserSaida.getDate();
@@ -543,7 +549,7 @@ public void preencherTabelaEntrada(String sql){
 					int anoDoBanco = ano.retornaAno();
 					
 					//Verifica se todos os campos estão preenchidos antes de salvar.Caso não estejam, mostra mensagem informando o usuário
-					if((valorSaida=="")||(motivo=="Selecione Uma Opção")||(data==null)){
+					if((valorSaida.isEmpty())||(motivo=="Selecione Uma Opção")||(data==null)){
 						JOptionPane.showMessageDialog(null, "Favor Preencher Todos os Campos");
 					}else{
 						
@@ -559,11 +565,11 @@ public void preencherTabelaEntrada(String sql){
 						novaSaida.setDataSaida(data);
 						novaSaida.setObservacaoSaida(obs);
 						novaSaida.setStatus("PAGA");
-						novaSaida.insereSaida();
-						JOptionPane.showMessageDialog(null, "Saída de Valores Realizada Com Sucesso");
+						verificaResultado = novaSaida.insereSaida();						
 						textFieldObsSaida.setText("");
 						formattedTextFieldValorSaida.setText("");								
-									
+						
+						if(verificaResultado==true){
 						//envia dados a serem inseridos ou atualizados em movimentação
 						if(valorNoBancoMensal.equals("0.00")){
 							
@@ -591,13 +597,11 @@ public void preencherTabelaEntrada(String sql){
 							if(valorMensal<0){
 								labelValorMensal.setText(String.valueOf(valorMensal));
 								labelValorMensal.setForeground(Color.red);
-								//labelValorTotal.setText(valorSaida);
-								//labelValorTotal.setForeground(Color.red);
+								
 							}else{
 								labelValorMensal.setForeground(Color.black);								
 								labelValorMensal.setText(valorSaida);	
-								//labelValorTotal.setText(String.valueOf(valorTotal));
-								//labelValorTotal.setForeground(Color.red);
+								
 							}													
 							
 						}else{
@@ -622,7 +626,8 @@ public void preencherTabelaEntrada(String sql){
 								labelValorMensal.setForeground(Color.black);								
 								labelValorMensal.setText(String.valueOf(valorMensal));
 							}
-						}				
+						}	
+						}
 						}
 				}//Fim do método caso a opção selecionada seja Saída	
 				else if(opcaoDesejada=="Contas a Pagar"){
@@ -1055,7 +1060,16 @@ public void preencherTabelaEntrada(String sql){
 						while(rs.next()){
 							comboBoxDescricaoMotivo.addItem(rs.getString("epiNome"));
 						}
-					}else{
+					}else if(opcaoEscolhida=="Ferramental"){
+						
+						String buscaDados = "select * from equipamentos";
+						rs = conecta.stm.executeQuery(buscaDados);
+						
+						while(rs.next()){
+							comboBoxDescricaoMotivo.addItem(rs.getString("equipamentoNome"));
+						}
+						
+					}else {
 						
                         String buscaDados = "select * from automovel";
 						rs = conecta.stm.executeQuery(buscaDados);
@@ -1072,7 +1086,7 @@ public void preencherTabelaEntrada(String sql){
 				
 			}
 		});
-		comboBoxMotivo.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Autom\u00F3vel", "Diversos", "EPI", "Fornecedor", "Funcion\u00E1rio", "Impostos", "Publicidade"}));
+		comboBoxMotivo.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Autom\u00F3vel", "Diversos", "EPI", "Ferramental", "Fornecedor", "Funcion\u00E1rio", "Impostos", "Publicidade"}));
 		comboBoxMotivo.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		comboBoxMotivo.setBounds(196, 55, 209, 28);
 		panelSaida.add(comboBoxMotivo);
@@ -1216,7 +1230,19 @@ public void preencherTabelaEntrada(String sql){
 						}
 					}else if((opcaoDesejada=="Entradas Totais")||(opcaoDesejada=="Saídas Totais")){
 						comboBoxItem.setEnabled(false);
+					}else if(opcaoDesejada=="Ferramental"){
+						
+						comboBoxItem.setEnabled(true);
+						
+						String buscaDados = "select * from equipamentos";
+						rs = conecta.stm.executeQuery(buscaDados);
+						
+						while(rs.next()){
+							comboBoxItem.addItem(rs.getString("equipamentoNome"));
+						}
+						
 					}else {
+						
 						comboBoxItem.setEnabled(true);
                           String categoria = "Fornecedor";
 						
@@ -1236,7 +1262,7 @@ public void preencherTabelaEntrada(String sql){
 				
 			}
 		});
-		comboBoxpesquisaPor.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Entradas Totais", "Sa\u00EDdas Totais", "Autom\u00F3vel", "Diversos", "EPI", "Fornecedor ", "Funcion\u00E1rio", "Impostos", "Publicidade"}));
+		comboBoxpesquisaPor.setModel(new DefaultComboBoxModel(new String[] {"Selecione Uma Op\u00E7\u00E3o", "Entradas Totais", "Sa\u00EDdas Totais", "Autom\u00F3vel", "Diversos", "EPI", "Ferramental", "Fornecedor ", "Funcion\u00E1rio", "Impostos", "Publicidade"}));
 		comboBoxpesquisaPor.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		comboBoxpesquisaPor.setBounds(35, 54, 204, 28);
 		panel_1.add(comboBoxpesquisaPor);
@@ -1370,28 +1396,28 @@ public void preencherTabelaEntrada(String sql){
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
-				Document documentoPDF = new Document();
+				String opcao = (String)comboBoxpesquisaPor.getSelectedItem();				
+				
+				if(opcao=="Selecione Uma Opção"){
+					
+				}else{	
+					
+					if(labelTotal.getText().isEmpty()){
+						
+					}else{					
+					double valorTotal = Double.parseDouble(labelTotal.getText());
+					
+				MessageFormat cabecalho = new MessageFormat("Relatório de Saída/Entrada de Valores");
+				MessageFormat rodape = new MessageFormat("Valor Total = "+valorTotal);
 				
 				try {
-					PdfWriter.getInstance(documentoPDF, new FileOutputStream("Relatório.pdf"));
-					
-					documentoPDF.open();
-					
-					documentoPDF.add((Element) table);
-					
-				} catch (FileNotFoundException | DocumentException e) {
+					table.print(JTable.PrintMode.FIT_WIDTH,cabecalho,rodape);
+				} catch (PrinterException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(null, e);
 				}
-				
-				try {
-					Desktop.getDesktop().open(new File("Relatório.pdf"));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-				
-				
+				}
 			}
 		});
 		button.setToolTipText("Imprimir");

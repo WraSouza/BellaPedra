@@ -15,7 +15,7 @@ public class ConectaBanco {
 	public void conectaBanco() throws SQLException {
 		
 		try{
-		con = DriverManager.getConnection("jdbc:mariadb://localhost:3306/bellapedra","root","root");
+		con = DriverManager.getConnection("jdbc:mariadb://localhost:3306/bellapedra","root","root100%");
 		stm = con.createStatement();
 		}catch(SQLException e){
 			JOptionPane.showMessageDialog(null, "Não Foi Possível Conectar ao Banco");

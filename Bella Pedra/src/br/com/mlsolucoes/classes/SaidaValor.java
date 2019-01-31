@@ -52,7 +52,9 @@ public class SaidaValor {
 		this.observacaoSaida = observacaoSaida;
 	}
 	
-	public void insereSaida(){
+	public boolean insereSaida(){
+		
+		boolean resultado = true;
 		
 		try{
 			ConectaBanco conecta = new ConectaBanco();
@@ -70,12 +72,16 @@ public class SaidaValor {
 			stm.executeUpdate();
 			stm.close();
 			conecta.con.close();			
-			
+			JOptionPane.showMessageDialog(null, "Saída de Valores Realizada Com Sucesso");
 			
 		}catch(SQLException e){
 			JOptionPane.showMessageDialog(null, e);
+            resultado = false;
+			
+			return resultado;
 		}
 		
+		return resultado;
 		
 	}
 

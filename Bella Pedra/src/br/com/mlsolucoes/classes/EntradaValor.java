@@ -58,7 +58,9 @@ public class EntradaValor {
 		this.status = status;
 	}
 	
-	public void insereEntrada(){
+	public boolean insereEntrada(){
+		
+		boolean resultado = true;
 		
 		try{
 			ConectaBanco conecta = new ConectaBanco();
@@ -76,12 +78,16 @@ public class EntradaValor {
 			stm.setString(7, this.status);
 			stm.executeUpdate();
 			stm.close();
-			conecta.con.close();
-			
+			conecta.con.close();			
+			JOptionPane.showMessageDialog(null, "Entrada de Valores Inserida com Sucesso");
 		}catch(SQLException e){
 			JOptionPane.showMessageDialog(null, e);
+			resultado = false;
+			
+			return resultado;
 		}
 		
+		return resultado;
 		
 	}//Fim do método de inserir o valor de um serviço realizado
 
